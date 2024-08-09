@@ -63,6 +63,7 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("signup") {
                             // Signup screen composable
+                            //make a new file for signup
                         }
                         composable("welcome") {
                             HomeScreen(navController)
