@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+<!--<item android:right="2dp" android:bottom="8dp" android:top="8dp"> &lt;!&ndash; Margins &ndash;&gt;-->
+<!--    <shape>-->
+        <solid android:color="#208787" /> <!-- Scrollbar Color -->
+        <corners android:radius="41dp" /> <!-- Scrollbar Radius -->
+        <size android:width="6dp"/> <!-- Scrollbar Width -->
+<!--    </shape>-->
+<!--</item>-->
+</shape>
