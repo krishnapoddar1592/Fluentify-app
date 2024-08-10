@@ -1,5 +1,6 @@
 package com.example.fluentifyapp.ui.screens.login
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,7 +12,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -20,50 +23,54 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.fluentifyapp.R
 import com.example.fluentifyapp.ui.theme.textFieldBorderColor
 import com.example.fluentifyapp.ui.theme.textFieldTextColor
-import com.example.fluentifyapp.ui.viewmodel.login.LoginScreenViewModel
+
+@Preview(
+    showBackground = true,
+    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_NO // Force light theme
+)
+@Composable
+fun PreviewLoginScreen() {
+    LoginScreenPreview()
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(
-    viewModel: LoginScreenViewModel = hiltViewModel(),
-    onNavigateToSignUp: () -> Unit,
-    onNavigateAfterLogin: () -> Unit
-) {
-    val username by viewModel.username.collectAsState()
-    val password by viewModel.password.collectAsState()
-    val isPasswordVisible by viewModel.isPasswordVisible.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val loginSuccess by viewModel.loginSuccess.collectAsState()
+fun LoginScreenPreview() {
+    // Mock values for preview purposes
+    var username by remember { mutableStateOf("User123") }
+    var password by remember { mutableStateOf("password") }
+    var isPasswordVisible by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
 
-    val quicksand = FontFamily(
-        Font(resId = R.font.quicksand, weight = FontWeight.Normal),
-        Font(resId = R.font.quicksand_bold, weight = FontWeight.Bold),
-        Font(resId = R.font.quicksand_light, weight = FontWeight.Light)
-    )
-    val rubik = FontFamily(Font(resId = R.font.rubik_normal))
+    val quicksand = if (LocalInspectionMode.current) {
+        FontFamily.SansSerif
+    } else {
+        FontFamily(
+            Font(resId = R.font.quicksand, weight = FontWeight.Normal),
+            Font(resId = R.font.quicksand_bold, weight = FontWeight.Bold),
+            Font(resId = R.font.quicksand_light, weight = FontWeight.Light)
+        )
+    }
 
-    LaunchedEffect(loginSuccess) {
-        if (loginSuccess) {
-            onNavigateAfterLogin()
-        }
+    val rubik = if (LocalInspectionMode.current) {
+        FontFamily.SansSerif
+    } else {
+        FontFamily(Font(resId = R.font.rubik_normal))
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF4FBFB))
             .padding(16.dp),
-
         horizontalAlignment = Alignment.CenterHorizontally
-
     ) {
-
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
@@ -85,10 +92,16 @@ fun LoginScreen(
                 modifier = Modifier.padding(top = 24.dp)
             )
 
+
             OutlinedTextField(
                 value = username,
-                onValueChange = { viewModel.setUsername(it) },
-                placeholder = { Text("Email Or Username", style = TextStyle(fontSize = 16.sp, color = textFieldBorderColor)) },
+                onValueChange = { username = it },
+                placeholder = {
+                    Text(
+                        "Email Or Username",
+                        style = TextStyle(fontSize = 16.sp, color = textFieldBorderColor)
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 36.dp)
@@ -107,15 +120,23 @@ fun LoginScreen(
                 singleLine = true,
             )
 
+
             OutlinedTextField(
                 value = password,
-                onValueChange = { viewModel.setPassword(it) },
-                placeholder = { Text("Password", style = TextStyle(fontSize = 16.sp, color = textFieldBorderColor)) },
+                onValueChange = { password = it },
+                placeholder = {
+                    Text(
+                        "Password",
+                        style = TextStyle(fontSize = 16.sp, color = textFieldBorderColor)
+                    )
+                },
+
                 visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+
                 trailingIcon = {
                     IconButton(
-                        onClick = { viewModel.togglePasswordVisibility() },
+                        onClick = { isPasswordVisible = !isPasswordVisible },
                         modifier = Modifier.padding(end = 3.dp)
                     ) {
                         Icon(
@@ -145,6 +166,8 @@ fun LoginScreen(
                     .background(Color.White, shape = RoundedCornerShape(20.dp)),
             )
 
+
+
             Text(
                 text = "Forgot your password?",
                 color = Color(0xFF57AFB0),
@@ -152,11 +175,13 @@ fun LoginScreen(
                 modifier = Modifier
                     .align(Alignment.End)
                     .padding(top = 28.dp)
-                    .clickable { viewModel.forgotPassword() }
+                    .clickable { /* TODO: Forgot password logic */ }
             )
 
+
+
             Button(
-                onClick = { viewModel.login() },
+                onClick = { /* TODO: Login logic */ },
                 modifier = Modifier
                     .width(192.dp)
                     .padding(top = 60.dp),
@@ -165,7 +190,7 @@ fun LoginScreen(
             ) {
                 Text(
                     text = "Login",
-                    fontFamily = rubik,
+                    fontFamily = FontFamily(Font(R.font.rubik)),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -173,6 +198,10 @@ fun LoginScreen(
             }
         }
 
+        // This will push the content below to the bottom
+//        Spacer(modifier = Modifier.weight(0.1f))
+
+        // Bottom content
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -189,7 +218,7 @@ fun LoginScreen(
                     .width(179.dp)
                     .height(37.dp)
                     .padding(top = 16.dp)
-                    .clickable { viewModel.googleSignIn() }
+                    .clickable { /* TODO: Google Sign-In logic */ }
             )
 
             Row(
@@ -205,16 +234,9 @@ fun LoginScreen(
                     fontSize = 12.sp,
                     modifier = Modifier
                         .padding(start = 4.dp)
-                        .clickable { onNavigateToSignUp() }
+                        .clickable { /* TODO: Navigate to SignUp */ }
                 )
             }
         }
-
-        if (isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
-        }
     }
 }
-
