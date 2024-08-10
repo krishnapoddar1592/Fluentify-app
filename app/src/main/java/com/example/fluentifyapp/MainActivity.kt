@@ -10,17 +10,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.fluentifyapp.repository.AuthRepository
-import com.example.fluentifyapp.repository.AuthRepositoryImpl
-import com.example.fluentifyapp.repository.AuthRepositoryModule
 import com.example.fluentifyapp.ui.screens.home.HomeScreen
 import com.example.fluentifyapp.ui.screens.login.LoginScreen
 import com.example.fluentifyapp.ui.viewmodel.login.LoginScreenViewModel
-import com.example.fluentifyapp.ui.viewmodel.login.LoginScreenViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -55,7 +50,6 @@ class MainActivity : ComponentActivity() {
                             val viewModel: LoginScreenViewModel = hiltViewModel()
 
                             LoginScreen(
-                                navController = navController,
                                 viewModel = viewModel,
                                 onNavigateToSignUp = { navController.navigate("signup") },
                                 onNavigateAfterLogin = { navController.navigate("welcome") }
