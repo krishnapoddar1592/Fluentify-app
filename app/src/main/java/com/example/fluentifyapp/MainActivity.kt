@@ -15,7 +15,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.fluentifyapp.ui.screens.home.HomeScreen
 import com.example.fluentifyapp.ui.screens.login.LoginScreen
+import com.example.fluentifyapp.ui.screens.signup.SignUpScreen
 import com.example.fluentifyapp.ui.viewmodel.login.LoginScreenViewModel
+import com.example.fluentifyapp.ui.viewmodel.signup.SignUpScreenViewModel
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -58,9 +60,18 @@ class MainActivity : ComponentActivity() {
                         composable("signup") {
                             // Signup screen composable
                             //make a new file for signup
+                            val viewModel:SignUpScreenViewModel= hiltViewModel()
+                            SignUpScreen(
+                                viewModel = viewModel,
+                                onNavigateToSignIn = { navController.navigate("login") },
+                                onNavigateAfterSignUp = { navController.navigate("userDetails") }
+                            )
                         }
                         composable("welcome") {
                             HomeScreen(navController)
+                        }
+                        composable("userDetails"){
+                            //user details screen
                         }
                     }
                 }
