@@ -64,6 +64,7 @@ class LoginScreenViewModel @Inject constructor(
             }
 
             try {
+
                 val result = authRepository.signInWithEmailAndPassword(email, password)
                 result.fold(
                     onSuccess = { user ->

@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fluentifyapp.repository.AuthRepository
+import com.example.fluentifyapp.repository.AuthRepositoryImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,7 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SignUpScreenViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepositoryImpl
 ) : ViewModel() {
     private val _username = MutableStateFlow("")
     val username = _username.asStateFlow()
@@ -65,6 +66,8 @@ class SignUpScreenViewModel @Inject constructor(
             }
 
             try {
+                val emailExists= authRepository.checkIfEmailExists(email)
+                Log.d(TAG, "signUpWithEmail:$emailExists")
                 val result = authRepository.createUserWithEmailAndPassword(email, password)
                 result.fold(
                     onSuccess = { user ->

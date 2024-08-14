@@ -28,4 +28,17 @@ class AuthRepositoryImpl @Inject constructor(private val firebaseAuth: FirebaseA
             Result.failure(e)
         }
     }
+    suspend fun checkIfEmailExists(email: String): Boolean {
+        return try {
+            val signInMethods = firebaseAuth.fetchSignInMethodsForEmail(email).await()
+            if (signInMethods.signInMethods?.isNotEmpty() == true) {
+                true // Email is already registered
+            } else {
+                false // Email is not registered
+            }
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
 }
