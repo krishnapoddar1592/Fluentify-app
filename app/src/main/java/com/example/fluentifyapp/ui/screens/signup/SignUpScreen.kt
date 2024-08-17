@@ -43,7 +43,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.fluentifyapp.R
 import com.example.fluentifyapp.ui.theme.textFieldBorderColor
 import com.example.fluentifyapp.ui.theme.textFieldTextColor
-import com.example.fluentifyapp.ui.viewmodel.login.LoginScreenViewModel
 import com.example.fluentifyapp.ui.viewmodel.signup.SignUpScreenViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,7 +50,8 @@ import com.example.fluentifyapp.ui.viewmodel.signup.SignUpScreenViewModel
 fun SignUpScreen(
     viewModel: SignUpScreenViewModel = hiltViewModel(),
     onNavigateToSignIn: () -> Unit,
-    onNavigateAfterSignUp: () -> Unit
+    onNavigateAfterSignUp: () -> Unit,
+    onNavigateToUserDetails: () -> Unit
 ) {
     val username by viewModel.username.collectAsState()
     val password by viewModel.password.collectAsState()
@@ -68,7 +68,7 @@ fun SignUpScreen(
 
     LaunchedEffect(signupSuccess) {
         if (signupSuccess) {
-            onNavigateAfterSignUp()
+            onNavigateToUserDetails()
         }
     }
 

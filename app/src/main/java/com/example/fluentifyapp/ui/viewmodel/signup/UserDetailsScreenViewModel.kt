@@ -2,15 +2,22 @@ package com.example.fluentifyapp.ui.viewmodel.signup
 
 import android.app.DatePickerDialog
 import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fluentifyapp.languages.LanguageClass
+import com.example.fluentifyapp.languages.LanguageData
 import com.example.fluentifyapp.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import java.util.*
 import javax.inject.Inject
 
@@ -27,34 +34,80 @@ class UserDetailsScreenViewModel @Inject constructor(
     private val _dob = MutableStateFlow("")
     val dob: StateFlow<String> = _dob
 
-    private val _selectedLanguage = MutableStateFlow("English")
-    val selectedLanguage: StateFlow<String> = _selectedLanguage
+    private val _selectedLanguage = MutableStateFlow(LanguageClass())
+    val selectedLanguage: StateFlow<LanguageClass> = _selectedLanguage
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading
+    // Language list
+    val languages = LanguageData.getLanguageList()
 
-    // Manage Dropdown Menu visibility
-    var isLanguageDropdownExpanded = false
-        private set
+    // State for dropdown visibility
+    private val _isLanguageDropdownExpanded = MutableStateFlow(false)
+    val isLanguageDropdownExpanded: StateFlow<Boolean> = _isLanguageDropdownExpanded
 
-    // List of languages
-    val languages = listOf("English", "Spanish", "French")
-
-    fun setName(newName: String) {
-        _name.value = newName
-    }
-
-    fun setDob(newDob: String) {
-        _dob.value = newDob
-    }
-
-    fun setSelectedLanguage(language: String) {
+    fun setSelectedLanguage(language: LanguageClass) {
         _selectedLanguage.value = language
     }
 
     fun setLanguageDropdownExpanded(expanded: Boolean) {
-        isLanguageDropdownExpanded = expanded
+        _isLanguageDropdownExpanded.value = expanded
     }
+
+    private val _nameError = MutableStateFlow<String?>(null)
+    val nameError: StateFlow<String?> = _nameError
+
+    private val _dobError = MutableStateFlow<String?>(null)
+    val dobError: StateFlow<String?> = _dobError
+
+    fun setName(newName: String) {
+        _name.value = newName
+        validateName(newName)
+    }
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun setDob(newDob: String) {
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        try {
+            val selectedDate = LocalDate.parse(newDob, formatter)
+            val currentDate = LocalDate.now()
+            if (selectedDate.isBefore(currentDate)) {
+                _dob.value = newDob
+                _dobError.value = null
+            } else {
+                _dobError.value = "Selected date must be in the past"
+            }
+        } catch (e: DateTimeParseException) {
+            _dobError.value = "Invalid date format"
+        }
+    }
+
+    private fun validateName(name: String) {
+        if (name.isBlank()) {
+            _nameError.value = "Name cannot be empty"
+        } else {
+            _nameError.value = null
+        }
+    }
+
+    fun validateInputs(): Boolean {
+        validateName(_name.value)
+        return _nameError.value == null && _dobError.value == null && _name.value.isNotBlank() && _dob.value.isNotBlank()
+    }
+
+    fun saveUserData() {
+        viewModelScope.launch {
+            if (validateInputs()) {
+                _isLoading.value = true
+                // ... existing saving logic ...
+                _isLoading.value = false
+            }
+        }
+    }
+
+
+
+
 
     fun showDatePicker(context: Context) {
         val calendar = Calendar.getInstance()
@@ -74,32 +127,32 @@ class UserDetailsScreenViewModel @Inject constructor(
         ).show()
     }
 
-    fun saveUserData() {
-        viewModelScope.launch {
-            _isLoading.value = true
+//    fun saveUserData() {
+//        viewModelScope.launch {
+//            _isLoading.value = true
+////
+////            // Replace with actual Firebase logic
+////            val user = authRepository.currentUser
+////            val nameText = _name.value
+////            val dobText = _dob.value
+////            val language = _selectedLanguage.value
+////            val email = user?.email
+////
+////            // Simulate saving data (Replace with actual API call)
+////            if (nameText.isNotBlank() && dobText.isNotBlank() && email != null) {
+////                // Here, you would send the data to your backend API
+////                // ApiManager.postDataToApi(user.uid, nameText, dobText, language, email)
+////
+////                // Simulate network delay
+////                kotlinx.coroutines.delay(1000)
+////
+////                // On success
+////                onComplete()
+////            } else {
+////                // Handle error
+////            }
 //
-//            // Replace with actual Firebase logic
-//            val user = authRepository.currentUser
-//            val nameText = _name.value
-//            val dobText = _dob.value
-//            val language = _selectedLanguage.value
-//            val email = user?.email
-//
-//            // Simulate saving data (Replace with actual API call)
-//            if (nameText.isNotBlank() && dobText.isNotBlank() && email != null) {
-//                // Here, you would send the data to your backend API
-//                // ApiManager.postDataToApi(user.uid, nameText, dobText, language, email)
-//
-//                // Simulate network delay
-//                kotlinx.coroutines.delay(1000)
-//
-//                // On success
-//                onComplete()
-//            } else {
-//                // Handle error
-//            }
-
-            _isLoading.value = false
-        }
-    }
+//            _isLoading.value = false
+//        }
+//    }
 }
