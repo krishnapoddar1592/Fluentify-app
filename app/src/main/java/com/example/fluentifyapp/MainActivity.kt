@@ -16,8 +16,10 @@ import androidx.navigation.compose.rememberNavController
 import com.example.fluentifyapp.ui.screens.home.HomeScreen
 import com.example.fluentifyapp.ui.screens.login.LoginScreen
 import com.example.fluentifyapp.ui.screens.signup.SignUpScreen
+import com.example.fluentifyapp.ui.screens.signup.UserDetailsScreen
 import com.example.fluentifyapp.ui.viewmodel.login.LoginScreenViewModel
 import com.example.fluentifyapp.ui.viewmodel.signup.SignUpScreenViewModel
+import com.example.fluentifyapp.ui.viewmodel.signup.UserDetailsScreenViewModel
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -53,7 +55,8 @@ class MainActivity : ComponentActivity() {
 
                             LoginScreen(
                                 viewModel = viewModel,
-                                onNavigateToSignUp = { navController.navigate("signup") },
+//                                onNavigateToSignUp = { navController.navigate("signup") },
+                                onNavigateToSignUp = { navController.navigate("userDetails") },
                                 onNavigateAfterLogin = { navController.navigate("welcome") }
                             )
                         }
@@ -63,6 +66,7 @@ class MainActivity : ComponentActivity() {
                             val viewModel:SignUpScreenViewModel= hiltViewModel()
                             SignUpScreen(
                                 viewModel = viewModel,
+                                onNavigateToUserDetails={navController.navigate("userDetails")},
                                 onNavigateToSignIn = { navController.navigate("login") },
                                 onNavigateAfterSignUp = { navController.navigate("userDetails") }
                             )
@@ -72,6 +76,12 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("userDetails"){
                             //user details screen
+                            val viewModel:UserDetailsScreenViewModel= hiltViewModel()
+                            UserDetailsScreen(
+                                viewModel = viewModel,
+                                onNavigateAfterSignIn = { navController.navigate("welcome") },
+                                onBackPressed = {navController.navigate("signup")}
+                            )
                         }
                     }
                 }
