@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.fluentifyapp.R
+import com.example.fluentifyapp.ui.theme.AppFonts
 import com.example.fluentifyapp.ui.theme.textFieldBorderColor
 import com.example.fluentifyapp.ui.theme.textFieldTextColor
 import com.example.fluentifyapp.ui.viewmodel.signup.UserDetailsScreenViewModel
@@ -33,13 +34,7 @@ fun LanguageDropDown() {
     var expanded by remember { mutableStateOf(false) }
     var selectedLanguage by remember { mutableStateOf(viewmodel.languages[0]) }
 
-    val quicksand = FontFamily(
-        Font(resId = R.font.quicksand, weight = FontWeight.Normal),
-        Font(resId = R.font.quicksand_bold, weight = FontWeight.Bold),
-        Font(resId = R.font.quicksand_light, weight = FontWeight.Light)
-    )
 
-    val rubik = FontFamily(Font(resId = R.font.rubik_normal))
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -56,7 +51,7 @@ fun LanguageDropDown() {
             onExpandedChange = {
                 expanded = !expanded
             },
-            modifier = Modifier.background(Color.White, shape = RoundedCornerShape(16.dp))
+            modifier = Modifier.background(Color.White, shape = RoundedCornerShape(20.dp))
         ) {
             TextField(
                 value = selectedLanguage.text,
@@ -87,8 +82,9 @@ fun LanguageDropDown() {
             ExposedDropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
-                modifier = Modifier.background(Color.White).exposedDropdownSize(),
+                modifier = Modifier.background(Color.White).exposedDropdownSize()
             ) {
+
                 viewmodel.languages.forEach { language ->
                     DropdownMenuItem(
                         onClick = {
@@ -110,7 +106,7 @@ fun LanguageDropDown() {
                                 )
                                 Text(
                                     text = language.text,
-                                    fontFamily = rubik,
+                                    fontFamily = AppFonts.rubik,
                                     fontSize = 17.sp
                                 )
                             }

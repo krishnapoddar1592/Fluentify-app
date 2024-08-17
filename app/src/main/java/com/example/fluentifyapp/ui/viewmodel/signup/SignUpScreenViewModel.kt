@@ -6,8 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fluentifyapp.repository.AuthRepository
 import com.example.fluentifyapp.repository.AuthRepositoryImpl
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -34,13 +36,25 @@ class SignUpScreenViewModel @Inject constructor(
     private val _signupSuccess = MutableStateFlow(false)
     val signupSuccess = _signupSuccess.asStateFlow()
 
+    private val _userNameError = MutableStateFlow<String?>(null)
+    val userNameError: StateFlow<String?> = _userNameError
+
+    private val _passwordError = MutableStateFlow<String?>(null)
+    val passwordError: StateFlow<String?> = _passwordError
+
+
+
     fun setUsername(value: String) {
         _username.value = value
+        validateUsername(value)
     }
 
     fun setPassword(value: String) {
         _password.value = value
+        validatePassword(value)
     }
+
+
 
     fun togglePasswordVisibility() {
         _isPasswordVisible.value = !_isPasswordVisible.value
@@ -105,7 +119,41 @@ class SignUpScreenViewModel @Inject constructor(
     }
 
     companion object {
-        private const val TAG = "LoginScreenViewModel"
+        private const val TAG = "SignUpScreenViewModel"
+    }
+
+
+    private fun validateUsername(username: String) {
+        if (username.isBlank()) {
+            _userNameError.value = "Email cannot be empty"
+        } else {
+            viewModelScope.launch {
+                try {
+                    if (authRepository.checkIfEmailExists(username)) {
+                        _userNameError.value = "Email already in use"
+                        Log.d(TAG,"email exists")
+                    } else {
+                        Log.d(TAG,"email exists")
+                        _userNameError.value = null
+                    }
+                } catch (e: FirebaseAuthInvalidCredentialsException) {
+                    // Handle specific exception for badly formatted email
+                    _userNameError.value = "Invalid email format"
+                } catch (e: Exception) {
+                    // Handle any other exceptions
+                    _userNameError.value = "An error occurred: ${e.message}"
+                    Log.e(TAG, "validateUsername:failure", e)
+                }
+            }
+        }
+    }
+
+    private fun validatePassword(value: String) {
+        if(value.isBlank()){
+            _passwordError.value="Password cannot be empty"
+        }else{
+            _passwordError.value=null
+        }
     }
 }
 

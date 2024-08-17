@@ -1,18 +1,22 @@
 package com.example.fluentifyapp
 
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.fluentifyapp.ui.screens.home.HomeScreen
 import com.example.fluentifyapp.ui.screens.login.LoginScreen
 import com.example.fluentifyapp.ui.screens.signup.SignUpScreen
@@ -27,6 +31,7 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private lateinit var mAuth: FirebaseAuth
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mAuth = FirebaseAuth.getInstance()
@@ -55,8 +60,7 @@ class MainActivity : ComponentActivity() {
 
                             LoginScreen(
                                 viewModel = viewModel,
-//                                onNavigateToSignUp = { navController.navigate("signup") },
-                                onNavigateToSignUp = { navController.navigate("userDetails") },
+                                onNavigateToSignUp = { navController.navigate("signup") },
                                 onNavigateAfterLogin = { navController.navigate("welcome") }
                             )
                         }
@@ -66,21 +70,34 @@ class MainActivity : ComponentActivity() {
                             val viewModel:SignUpScreenViewModel= hiltViewModel()
                             SignUpScreen(
                                 viewModel = viewModel,
-                                onNavigateToUserDetails={navController.navigate("userDetails")},
+                                onNavigateToUserDetails = { username, email ->
+                                    navController.navigate("userDetails/$username/$email")
+                                },
                                 onNavigateToSignIn = { navController.navigate("login") },
-                                onNavigateAfterSignUp = { navController.navigate("userDetails") }
+                                onNavigateAfterSignUp = { username, email ->
+                                    navController.navigate("userDetails/$username/$email")
+                                }
                             )
                         }
                         composable("welcome") {
                             HomeScreen(navController)
                         }
-                        composable("userDetails"){
-                            //user details screen
-                            val viewModel:UserDetailsScreenViewModel= hiltViewModel()
+                        composable(
+                            "userDetails/{username}/{password}",
+                            arguments = listOf(
+                                navArgument("username") { type = NavType.StringType },
+                                navArgument("password") { type = NavType.StringType }
+                            )
+                        ) { backStackEntry ->
+                            val username = backStackEntry.arguments?.getString("username") ?: ""
+                            val password = backStackEntry.arguments?.getString("password") ?: ""
+                            val viewModel: UserDetailsScreenViewModel = hiltViewModel()
                             UserDetailsScreen(
                                 viewModel = viewModel,
+                                username = username,
+                                password = password,
                                 onNavigateAfterSignIn = { navController.navigate("welcome") },
-                                onBackPressed = {navController.navigate("signup")}
+                                onBackPressed = { navController.navigate("signup") }
                             )
                         }
                     }
