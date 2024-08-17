@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.fluentifyapp.R
+import com.example.fluentifyapp.ui.theme.AppFonts
 import com.example.fluentifyapp.ui.theme.textFieldBorderColor
 import com.example.fluentifyapp.ui.theme.textFieldTextColor
 import com.example.fluentifyapp.ui.viewmodel.signup.UserDetailsScreenViewModel
@@ -36,7 +37,9 @@ import java.util.Calendar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserDetailsScreen(
-    viewModel: UserDetailsScreenViewModel = hiltViewModel(),
+    viewModel: UserDetailsScreenViewModel,
+    username: String,
+    password: String,
     onNavigateAfterSignIn: () -> Unit,
     onBackPressed: () -> Unit
 ) {
@@ -51,14 +54,11 @@ fun UserDetailsScreen(
     var expanded by remember { mutableStateOf(false) }
     var textFieldSize by remember { mutableStateOf(Size.Zero) }
     var textFieldPosition by remember { mutableStateOf(androidx.compose.ui.geometry.Offset.Zero) }
+    val signupSuccess by viewModel.signupSuccess.collectAsState()
+    viewModel.username=username;
+    viewModel.password=password
 
-    val quicksand = FontFamily(
-        Font(resId = R.font.quicksand, weight = FontWeight.Normal),
-        Font(resId = R.font.quicksand_bold, weight = FontWeight.Bold),
-        Font(resId = R.font.quicksand_light, weight = FontWeight.Light)
-    )
 
-    val rubik = FontFamily(Font(resId = R.font.rubik_normal))
 
     val scope = rememberCoroutineScope()
 
@@ -66,6 +66,11 @@ fun UserDetailsScreen(
     val showDatePicker = remember { mutableStateOf(false) }
 
     val context = LocalContext.current
+    LaunchedEffect(signupSuccess) {
+        if (signupSuccess) {
+            onNavigateAfterSignIn()
+        }
+    }
 
     // Trigger DatePickerDialog if showDatePicker is true
     LaunchedEffect(showDatePicker.value) {
@@ -97,160 +102,172 @@ fun UserDetailsScreen(
 
         Log.d("UserDetailsScreen", "DatePickerDialog shown")
     }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF4FBFB))
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Top bar with Back Button and Sign Up Title
-        Row(
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .background(Color(0xFFF4FBFB))
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.backarrowgreen),
-                contentDescription = "Back Button",
-                modifier = Modifier
-                    .size(width = 24.dp, height = 23.dp)
-                    .clickable { onBackPressed() }
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Text(
-                text = "Sign Up",
-                fontSize = 18.sp,
-                fontFamily = rubik,
-                color = Color(0xFF7B7B7B),
-                textAlign = TextAlign.Center,
-                modifier = Modifier.weight(1f)
-            )
-            Spacer(modifier = Modifier.weight(1f))
-        }
-
-        // Profile completion title and description
-        Text(
-            text = "Complete Profile",
-            fontSize = 34.sp,
-            fontFamily = quicksand,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF208787),
-            modifier = Modifier.padding(top = 50.dp)
-        )
-
-        Text(
-            text = "Complete your details or continue with social media",
-            fontSize = 12.sp,
-            modifier = Modifier.padding(top = 24.dp),
-            color = Color(0xFF7B7B7B)
-        )
-
-        // Name input field
-        OutlinedTextField(
-            value = name,
-            onValueChange = { viewModel.setName(it) },
-            placeholder = {
-                Text("Enter Your Name", style = TextStyle(fontSize = 16.sp, color = textFieldBorderColor))
-            },
-//            isError = nameError != null,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 36.dp)
-                .background(Color.White, shape = RoundedCornerShape(20.dp))
-                .border(
-                    width = 2.dp,
-                    color = if (nameError != null) Color(0xFFD32F2F) else textFieldBorderColor,
-                    shape = RoundedCornerShape(20.dp)
-                ),
-
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = Color.Transparent,
-                unfocusedBorderColor = Color.Transparent,
-                cursorColor = Color.Black
-            ),
-            textStyle = TextStyle(color = textFieldTextColor, fontSize = 16.sp),
-            singleLine = true,
-        )
-        if (nameError != null) {
-            Text(
-                text = nameError!!,
-                color = Color(0xFFD32F2F),
-                modifier = Modifier.align(Alignment.Start),
-                fontFamily = rubik,
-                fontSize = 14.sp
-            )
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp)
-                .border(
-                    width = 2.dp,
-                    color = if (dobError != null) Color(0xFFD32F2F) else textFieldBorderColor,
-                    shape = RoundedCornerShape(20.dp)
-                )
-
-        ) {
-            Text(
-                text = if (dob.isEmpty()) "Select Date of Birth" else dob,
+            // Top bar with Back Button and Sign Up Title
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable {
-                        Log.d("UserDetailsScreen", "Date of Birth field clicked")
-                        showDatePicker.value = true
-                    }
-                    .background(Color.White, shape = RoundedCornerShape(20.dp))
-                    .padding(16.dp),
-                color = if (dob.isEmpty()) textFieldBorderColor else textFieldTextColor,
+                    .padding(top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.backarrowgreen),
+                    contentDescription = "Back Button",
+                    modifier = Modifier
+                        .size(width = 24.dp, height = 23.dp)
+                        .clickable { onBackPressed() }
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = "Sign Up",
+                    fontSize = 18.sp,
+                    fontFamily = AppFonts.rubik,
+                    color = Color(0xFF7B7B7B),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.weight(1f))
+            }
 
-            )
-        }
-        if (dobError != null) {
+            // Profile completion title and description
             Text(
-                text = dobError!!,
-                color = Color(0xFFD32F2F),
-                modifier = Modifier.align(Alignment.Start),
-                fontFamily = rubik,
-                fontSize = 14.sp
-            )
-        }
-        LanguageDropDown()
-
-
-        // Continue button
-        Button(
-            onClick = {
-                scope.launch {
-                    viewModel.saveUserData()
-                    onNavigateAfterSignIn()
-                }
-            },
-            modifier = Modifier
-                .width(192.dp)
-                .padding(top = 60.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF208787)),
-            shape = RoundedCornerShape(14.dp)
-        ) {
-            Text(
-                text = "Continue",
-                fontFamily = quicksand,
-                fontSize = 18.sp,
+                text = "Complete Profile",
+                fontSize = 34.sp,
+                fontFamily = AppFonts.quicksand,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = Color(0xFF208787),
+                modifier = Modifier.padding(top = 50.dp)
             )
+
+            Text(
+                text = "Complete your details or continue with social media",
+                fontSize = 12.sp,
+                modifier = Modifier.padding(top = 24.dp),
+                color = Color(0xFF7B7B7B)
+            )
+
+            // Name input field
+            OutlinedTextField(
+                value = name,
+                onValueChange = { viewModel.setName(it) },
+                placeholder = {
+                    Text(
+                        "Enter Your Name",
+                        style = TextStyle(fontSize = 16.sp, color = textFieldBorderColor)
+                    )
+                },
+//            isError = nameError != null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 36.dp)
+                    .background(Color.White, shape = RoundedCornerShape(20.dp))
+                    .border(
+                        width = 2.dp,
+                        color = if (nameError != null) Color(0xFFD32F2F) else textFieldBorderColor,
+                        shape = RoundedCornerShape(20.dp)
+                    ),
+
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent,
+                    cursorColor = Color.Black
+                ),
+                textStyle = TextStyle(color = textFieldTextColor, fontSize = 16.sp),
+                singleLine = true,
+            )
+            if (nameError != null) {
+                Text(
+                    text = nameError!!,
+                    color = Color(0xFFD32F2F),
+                    modifier = Modifier.align(Alignment.Start),
+                    fontFamily = AppFonts.rubik,
+                    fontSize = 14.sp
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+                    .border(
+                        width = 2.dp,
+                        color = if (dobError != null) Color(0xFFD32F2F) else textFieldBorderColor,
+                        shape = RoundedCornerShape(20.dp)
+                    )
+
+            ) {
+                Text(
+                    text = if (dob.isEmpty()) "Select Date of Birth" else dob,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            Log.d("UserDetailsScreen", "Date of Birth field clicked")
+                            showDatePicker.value = true
+                        }
+                        .background(Color.White, shape = RoundedCornerShape(20.dp))
+                        .padding(16.dp),
+                    color = if (dob.isEmpty()) textFieldBorderColor else textFieldTextColor,
+
+                    )
+            }
+            if (dobError != null) {
+                Text(
+                    text = dobError!!,
+                    color = Color(0xFFD32F2F),
+                    modifier = Modifier.align(Alignment.Start),
+                    fontFamily = AppFonts.rubik,
+                    fontSize = 14.sp
+                )
+            }
+            LanguageDropDown()
+
+
+            // Continue button
+            Button(
+                onClick = {
+                    scope.launch {
+                        viewModel.saveUserData()
+                    }
+                },
+                modifier = Modifier
+                    .width(192.dp)
+                    .padding(top = 60.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF208787)),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Text(
+                    text = "Continue",
+                    fontFamily = AppFonts.quicksand,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+
+//            // Loading indicator
+//            if (isLoading) {
+//                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+//            }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-
-
         // Loading indicator
         if (isLoading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0x80000000)) // Semi-transparent background
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = Color.White // Make the loader white for better visibility
+                )
+            }
         }
     }
 }

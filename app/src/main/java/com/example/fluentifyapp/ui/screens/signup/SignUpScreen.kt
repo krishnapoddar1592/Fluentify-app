@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.fluentifyapp.R
+import com.example.fluentifyapp.ui.theme.AppFonts
 import com.example.fluentifyapp.ui.theme.textFieldBorderColor
 import com.example.fluentifyapp.ui.theme.textFieldTextColor
 import com.example.fluentifyapp.ui.viewmodel.signup.SignUpScreenViewModel
@@ -48,27 +49,24 @@ import com.example.fluentifyapp.ui.viewmodel.signup.SignUpScreenViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpScreen(
-    viewModel: SignUpScreenViewModel = hiltViewModel(),
+    viewModel: SignUpScreenViewModel,
+    onNavigateToUserDetails: (String, String) -> Unit,
     onNavigateToSignIn: () -> Unit,
-    onNavigateAfterSignUp: () -> Unit,
-    onNavigateToUserDetails: () -> Unit
+    onNavigateAfterSignUp: (String, String) -> Unit
 ) {
     val username by viewModel.username.collectAsState()
     val password by viewModel.password.collectAsState()
     val isPasswordVisible by viewModel.isPasswordVisible.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val signupSuccess by viewModel.signupSuccess.collectAsState()
+    val usernameError by viewModel.userNameError.collectAsState()
+    val passwordError by viewModel.passwordError.collectAsState()
 
-    val quicksand = FontFamily(
-        Font(resId = R.font.quicksand, weight = FontWeight.Normal),
-        Font(resId = R.font.quicksand_bold, weight = FontWeight.Bold),
-        Font(resId = R.font.quicksand_light, weight = FontWeight.Light)
-    )
-    val rubik = FontFamily(Font(resId = R.font.rubik_normal))
+
 
     LaunchedEffect(signupSuccess) {
         if (signupSuccess) {
-            onNavigateToUserDetails()
+            onNavigateToUserDetails(username,password)
         }
     }
 
@@ -90,7 +88,7 @@ fun SignUpScreen(
             Text(
                 text = "Fluentify",
                 fontSize = 48.sp,
-                fontFamily = quicksand,
+                fontFamily = AppFonts.quicksand,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF208787),
                 modifier = Modifier.padding(top = 84.dp)
@@ -99,7 +97,7 @@ fun SignUpScreen(
             Text(
                 text = "Sign Up",
                 fontSize = 18.sp,
-                fontFamily = rubik,
+                fontFamily = AppFonts.rubik,
                 modifier = Modifier.padding(top = 24.dp)
             )
 
@@ -112,7 +110,7 @@ fun SignUpScreen(
                     .padding(top = 36.dp)
                     .border(
                         width = 2.dp,
-                        color = textFieldBorderColor,
+                        color = if (usernameError != null) Color(0xFFD32F2F) else textFieldBorderColor,
                         shape = RoundedCornerShape(20.dp)
                     )
                     .background(Color.White, shape = RoundedCornerShape(20.dp)),
@@ -124,6 +122,15 @@ fun SignUpScreen(
                 textStyle = TextStyle(color = textFieldTextColor, fontSize = 16.sp),
                 singleLine = true,
             )
+            if (usernameError != null) {
+                Text(
+                    text = usernameError!!,
+                    color = Color(0xFFD32F2F),
+                    modifier = Modifier.align(Alignment.Start),
+                    fontFamily = AppFonts.rubik,
+                    fontSize = 14.sp
+                )
+            }
 
             OutlinedTextField(
                 value = password,
@@ -157,11 +164,20 @@ fun SignUpScreen(
                     .padding(top = 16.dp)
                     .border(
                         width = 2.dp,
-                        color = textFieldBorderColor,
+                        color = if (passwordError != null) Color(0xFFD32F2F) else textFieldBorderColor,
                         shape = RoundedCornerShape(20.dp)
                     )
                     .background(Color.White, shape = RoundedCornerShape(20.dp)),
             )
+            if (passwordError != null) {
+                Text(
+                    text = passwordError!!,
+                    color = Color(0xFFD32F2F),
+                    modifier = Modifier.align(Alignment.Start),
+                    fontFamily = AppFonts.rubik,
+                    fontSize = 14.sp
+                )
+            }
 
             Text(
                 text = "Forgot your password?",
@@ -174,16 +190,22 @@ fun SignUpScreen(
             )
 
             Button(
-                onClick = { viewModel.signup() },
+                onClick = {
+//                    if (usernameError==null && passwordError==null){
+                    onNavigateToUserDetails(username, password)
+//                    }
+//                    viewModel.signup()
+                },
                 modifier = Modifier
                     .width(192.dp)
                     .padding(top = 60.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF208787)),
-                shape = RoundedCornerShape(14.dp)
+                shape = RoundedCornerShape(14.dp),
+                enabled= usernameError==null && passwordError==null
             ) {
                 Text(
                     text = "Sign Up",
-                    fontFamily = rubik,
+                    fontFamily = AppFonts.rubik,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White

@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.fluentifyapp.R
+import com.example.fluentifyapp.ui.theme.AppFonts
 import com.example.fluentifyapp.ui.theme.textFieldBorderColor
 import com.example.fluentifyapp.ui.theme.textFieldTextColor
 import com.example.fluentifyapp.ui.viewmodel.login.LoginScreenViewModel
@@ -40,13 +41,6 @@ fun LoginScreen(
     val isPasswordVisible by viewModel.isPasswordVisible.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val loginSuccess by viewModel.loginSuccess.collectAsState()
-
-    val quicksand = FontFamily(
-        Font(resId = R.font.quicksand, weight = FontWeight.Normal),
-        Font(resId = R.font.quicksand_bold, weight = FontWeight.Bold),
-        Font(resId = R.font.quicksand_light, weight = FontWeight.Light)
-    )
-    val rubik = FontFamily(Font(resId = R.font.rubik_normal))
 
     LaunchedEffect(loginSuccess) {
         if (loginSuccess) {
@@ -72,7 +66,7 @@ fun LoginScreen(
             Text(
                 text = "Fluentify",
                 fontSize = 48.sp,
-                fontFamily = quicksand,
+                fontFamily = AppFonts.quicksand,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF208787),
                 modifier = Modifier.padding(top = 84.dp)
@@ -81,7 +75,7 @@ fun LoginScreen(
             Text(
                 text = "Login",
                 fontSize = 18.sp,
-                fontFamily = rubik,
+                fontFamily = AppFonts.rubik,
                 modifier = Modifier.padding(top = 24.dp)
             )
 
@@ -165,7 +159,7 @@ fun LoginScreen(
             ) {
                 Text(
                     text = "Login",
-                    fontFamily = rubik,
+                    fontFamily = AppFonts.rubik,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
