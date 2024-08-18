@@ -4,8 +4,7 @@ package com.example.fluentifyapp.ui.viewmodel.signup
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.fluentifyapp.repository.AuthRepository
-import com.example.fluentifyapp.repository.AuthRepositoryImpl
+import com.example.fluentifyapp.data.repository.AuthRepositoryImpl
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

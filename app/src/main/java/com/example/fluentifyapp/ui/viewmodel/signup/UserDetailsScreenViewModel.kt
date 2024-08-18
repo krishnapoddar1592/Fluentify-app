@@ -1,16 +1,13 @@
 package com.example.fluentifyapp.ui.viewmodel.signup
 
-import android.app.DatePickerDialog
-import android.content.Context
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fluentifyapp.languages.LanguageClass
 import com.example.fluentifyapp.languages.LanguageData
-import com.example.fluentifyapp.repository.AuthRepository
-import com.google.firebase.auth.FirebaseAuth
+import com.example.fluentifyapp.data.repository.AuthRepository
+import com.example.fluentifyapp.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,14 +16,15 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
-import java.util.*
 import javax.inject.Inject
 
 
 @HiltViewModel
 class UserDetailsScreenViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val userRepository: UserRepository
 ) :ViewModel(){
+
 
     // State flows for the UI
     private val _name = MutableStateFlow("")
@@ -70,6 +68,7 @@ class UserDetailsScreenViewModel @Inject constructor(
     }
 
     fun setLanguageDropdownExpanded(expanded: Boolean) {
+
         _isLanguageDropdownExpanded.value = expanded
     }
 
@@ -111,14 +110,18 @@ class UserDetailsScreenViewModel @Inject constructor(
         }
     }
 
-
     fun saveUserData() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
+                userRepository.getUser("er")
                 val result = authRepository.createUserWithEmailAndPassword(username, password)
                 result.fold(
                     onSuccess = { user ->
+
+                        val userId= user.uid
+
+
                         _signupResult.value = SignUpResult.Success("Successfully Signed up")
                         _signupSuccess.value = true
                     },

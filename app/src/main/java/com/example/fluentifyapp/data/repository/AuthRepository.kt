@@ -1,6 +1,5 @@
-package com.example.fluentifyapp.repository
+package com.example.fluentifyapp.data.repository
 
-import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.tasks.await
@@ -11,7 +10,8 @@ interface AuthRepository {
     suspend fun createUserWithEmailAndPassword(email: String, password: String): Result<FirebaseUser>
 }
 
-class AuthRepositoryImpl @Inject constructor(private val firebaseAuth: FirebaseAuth) : AuthRepository {
+class AuthRepositoryImpl @Inject constructor(private val firebaseAuth: FirebaseAuth) :
+    AuthRepository {
     override suspend fun signInWithEmailAndPassword(email: String, password: String): Result<FirebaseUser> {
         return try {
             val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
