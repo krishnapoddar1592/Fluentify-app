@@ -104,4 +104,10 @@ dependencies {
 
 
     implementation("com.google.accompanist:accompanist-placeholder:0.28.0")
+
+    // OkHttp3 library
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
+
+    // OkHttp Logging Interceptor
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 }

@@ -1,5 +1,7 @@
-package com.example.fluentifyapp.repository
+package com.example.fluentifyapp.di
 
+import com.example.fluentifyapp.data.repository.AuthRepository
+import com.example.fluentifyapp.data.repository.AuthRepositoryImpl
 import com.google.firebase.auth.FirebaseAuth
 import dagger.Module
 import dagger.Provides
