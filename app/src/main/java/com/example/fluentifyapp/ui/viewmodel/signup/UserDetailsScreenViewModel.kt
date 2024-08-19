@@ -1,6 +1,7 @@
 package com.example.fluentifyapp.ui.viewmodel.signup
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -22,7 +23,7 @@ import javax.inject.Inject
 @HiltViewModel
 class UserDetailsScreenViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val userRepository: UserRepository
+//    private val userRepository: UserRepository
 ) :ViewModel(){
 
 
@@ -114,7 +115,8 @@ class UserDetailsScreenViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                userRepository.getUser("er")
+                Log.d("login","$username  $password")
+//              userRepository.getUser("er")
                 val result = authRepository.createUserWithEmailAndPassword(username, password)
                 result.fold(
                     onSuccess = { user ->

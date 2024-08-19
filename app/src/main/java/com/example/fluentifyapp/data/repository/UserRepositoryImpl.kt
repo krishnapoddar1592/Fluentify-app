@@ -14,16 +14,16 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun getUser(userId: String): User {
         val response = userService.getUser(userId)
-        return User(response.id, response.name, response.email, response.age)
+        return User(response.userId, response.name, response.email, response.dob,response.language,null,null,response.currentCourse,null)
     }
 
     override suspend fun createUser(userRequest: UserRequest): User {
         val response = userService.createUser(userRequest)
-        return User(response.id, response.name, response.email, response.age)
+        return User(response.userId, response.name, response.email, response.dob,response.language,null,null,response.currentCourse,null)
     }
 
     override suspend fun updateUser(userId: String, userRequest: UserRequest): User {
         val response = userService.updateUser(userId, userRequest)
-        return User(response.id, response.name, response.email, response.age)
+        return User(response.userId, response.name, response.email, response.dob,response.language,null,null,response.currentCourse,null)
     }
 }
