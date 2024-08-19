@@ -80,7 +80,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("welcome") {
-                            HomeScreen(navController)
+                            HomeScreen()
                         }
                         composable(
                             "userDetails/{username}/{password}",
