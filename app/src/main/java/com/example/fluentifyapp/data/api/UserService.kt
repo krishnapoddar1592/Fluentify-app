@@ -2,6 +2,7 @@ package com.example.fluentifyapp.data.api
 
 
 
+import com.example.fluentifyapp.data.model.HomeInfo
 import com.example.fluentifyapp.data.model.User
 import com.example.fluentifyapp.data.model.UserRequest
 import com.example.fluentifyapp.data.model.UserResponse
@@ -22,6 +23,9 @@ interface UserService {
 
     @PUT("users/{id}")
     suspend fun updateUser(@Path("id") userId: String, @Body userRequest: UserRequest): UserResponse
+
+    @GET("users/{id}/home-info")
+    suspend fun getUserHomeInfo(@Path("id") userId: String): HomeInfo
 }
 
 

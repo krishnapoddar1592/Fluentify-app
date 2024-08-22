@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fluentifyapp.data.model.UserRequest
 import com.example.fluentifyapp.languages.LanguageClass
 import com.example.fluentifyapp.languages.LanguageData
 import com.example.fluentifyapp.data.repository.AuthRepository
@@ -23,7 +24,7 @@ import javax.inject.Inject
 @HiltViewModel
 class UserDetailsScreenViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-//    private val userRepository: UserRepository
+    private val userRepository: UserRepository
 ) :ViewModel(){
 
 
@@ -116,16 +117,25 @@ class UserDetailsScreenViewModel @Inject constructor(
             _isLoading.value = true
             try {
                 Log.d("login","$username  $password")
-//              userRepository.getUser("er")
                 val result = authRepository.createUserWithEmailAndPassword(username, password)
                 result.fold(
                     onSuccess = { user ->
+                        try {
+                            userRepository.createUser(
+                                UserRequest(
+                                    user.uid,
+                                    username,
+                                    _name.value,
+                                    _dob.value,
+                                    _selectedLanguage.value.text
+                                )
+                            )
+                            _signupResult.value = SignUpResult.Success("Successfully Signed up")
+                            _signupSuccess.value = true
+                        }catch (e:Exception){
+                            _signupResult.value = SignUpResult.Error("Error creating user: ${e.message}")
+                        }
 
-                        val userId= user.uid
-
-
-                        _signupResult.value = SignUpResult.Success("Successfully Signed up")
-                        _signupSuccess.value = true
                     },
                     onFailure = { exception ->
                         _signupResult.value = SignUpResult.Error("Authentication failed: ${exception.message}")
