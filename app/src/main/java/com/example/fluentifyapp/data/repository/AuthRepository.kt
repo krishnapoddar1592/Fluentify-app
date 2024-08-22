@@ -10,8 +10,7 @@ interface AuthRepository {
     suspend fun createUserWithEmailAndPassword(email: String, password: String): Result<FirebaseUser>
 }
 
-class AuthRepositoryImpl @Inject constructor(private val firebaseAuth: FirebaseAuth) :
-    AuthRepository {
+class AuthRepositoryImpl @Inject constructor(private val firebaseAuth: FirebaseAuth) : AuthRepository {
     override suspend fun signInWithEmailAndPassword(email: String, password: String): Result<FirebaseUser> {
         return try {
             val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
@@ -43,6 +42,14 @@ class AuthRepositoryImpl @Inject constructor(private val firebaseAuth: FirebaseA
         } catch (e: Exception) {
             println("Exception occurred: ${e.message}")
             throw e
+        }
+    }
+    suspend fun getCurrentUser():FirebaseUser?{
+        return try {
+            firebaseAuth.currentUser
+        }
+        catch (e: Exception){
+            null
         }
     }
 

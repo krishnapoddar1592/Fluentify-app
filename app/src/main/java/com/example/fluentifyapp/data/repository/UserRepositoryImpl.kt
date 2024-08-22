@@ -1,6 +1,7 @@
 package com.example.fluentifyapp.data.repository
 
 import com.example.fluentifyapp.data.api.UserService
+import com.example.fluentifyapp.data.model.HomeInfo
 import com.example.fluentifyapp.data.model.User
 import com.example.fluentifyapp.data.model.UserRequest
 import com.google.firebase.auth.FirebaseAuth
@@ -26,4 +27,9 @@ class UserRepositoryImpl @Inject constructor(
         val response = userService.updateUser(userId, userRequest)
         return User(response.userId, response.name, response.email, response.dob,response.language,null,null,response.currentCourse,null)
     }
+    suspend fun getHomeInfo(userId: String): HomeInfo {
+        val response=userService.getUserHomeInfo(userId)
+        return response
+    }
+
 }

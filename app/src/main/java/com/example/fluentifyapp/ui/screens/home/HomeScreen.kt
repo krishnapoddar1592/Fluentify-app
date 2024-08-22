@@ -98,7 +98,6 @@ fun Modifier.shimmerLoadingAnimation(
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen() {
     var isLoading by remember { mutableStateOf(true) }
@@ -283,7 +282,8 @@ fun SpanishProgressBox() {
         modifier = Modifier
             .fillMaxWidth()
 //            .size(height = 116.dp)
-            .background(Color(0xFF208787), RoundedCornerShape(17.dp))
+//            .background(Color(0xFF208787), RoundedCornerShape(17.dp))
+            .background(Color(0xFF208787))
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -321,7 +321,8 @@ fun CuisineProgressBox() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, borderColor, RoundedCornerShape(17.dp))
+//            .border(1.dp, borderColor, RoundedCornerShape(17.dp))
+            .border(1.dp, borderColor)
             .padding(16.dp)
             .background(backgroundColor)
     ) {
@@ -389,7 +390,7 @@ fun LanguageCard(language: String, iconResId: Int) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White)
-                .border(1.dp, borderColor, RoundedCornerShape(13.dp))// Set the background color here
+//                .border(1.dp, borderColor, RoundedCornerShape(13.dp))// Set the background color here
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
