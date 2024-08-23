@@ -1,4 +1,10 @@
+import java.io.FileInputStream
+import java.util.Properties
+
+val localProperties = Properties()
+localProperties.load(FileInputStream(rootProject.file("local.properties")))
 plugins {
+
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("kotlin-kapt")
@@ -26,6 +32,9 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+
+        buildConfigField("String", "BASE_URL", "\"${localProperties.getProperty("BASE_URL")}\"")
     }
 
     buildTypes {
@@ -56,6 +65,7 @@ android {
         }
     }
 }
+
 
 dependencies {
     // Kotlin

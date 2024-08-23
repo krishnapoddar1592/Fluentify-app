@@ -65,7 +65,7 @@ class HomeScreenViewModel @Inject constructor(
                 val results = awaitAll(
                     fetchUserDetails
                 )
-                val homeInfo = results[0] as HomeInfo
+                val homeInfo = results[0]
 
                 //populate the home screen with the fetched data
 
