@@ -3,5 +3,7 @@ import java.io.Serializable
 
 data class LanguageClass(
     var text: String = "",
-    var image: Int = 0
+    var image: Int = 0,
+    var emoji: String = "",
+    var code: String = ""
 ) : Serializable

@@ -5,14 +5,14 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import com.example.fluentifyapp.BuildConfig
+import okhttp3.Credentials
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
-// di/NetworkModule.kt
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
@@ -21,7 +21,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(BuildConfig.BASE_URL)
+            .baseUrl(com.example.fluentifyapp.di.Credentials.API_BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -29,8 +29,9 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
+    fun provideOkHttpClient(authInterceptor: Interceptor): OkHttpClient {
         return OkHttpClient.Builder()
+            .addInterceptor(authInterceptor)
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             })
@@ -39,8 +40,22 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideAuthInterceptor(): Interceptor {
+        return Interceptor { chain ->
+            val credentials = Credentials.basic(
+                com.example.fluentifyapp.di.Credentials.API_USERNAME,
+                com.example.fluentifyapp.di.Credentials.API_PASSWORD
+            )
+            val request = chain.request().newBuilder()
+                .header("Authorization", credentials)
+                .build()
+            chain.proceed(request)
+        }
+    }
+
+    @Provides
+    @Singleton
     fun provideUserService(retrofit: Retrofit): UserService {
         return retrofit.create(UserService::class.java)
     }
 }
-

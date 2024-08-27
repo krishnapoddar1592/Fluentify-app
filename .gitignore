@@ -45,3 +45,6 @@ Thumbs.db
 
 # Exclude gradle wrapper jar files if using versioned wrapper scripts
 !/gradle/wrapper/gradle-wrapper.properties
+
+Credentials.kt
+network_security_config.xml
