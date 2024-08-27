@@ -4,6 +4,7 @@ package com.example.fluentifyapp.ui.screens.home
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -28,11 +30,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,21 +43,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fluentifyapp.R
+import com.example.fluentifyapp.languages.LanguageClass
+import com.example.fluentifyapp.languages.LanguageData
+import com.example.fluentifyapp.ui.screens.common.LanguageCard
 import com.example.fluentifyapp.ui.theme.AppFonts
 import com.example.fluentifyapp.ui.theme.backgroundColor
 import com.example.fluentifyapp.ui.theme.borderColor
 import com.example.fluentifyapp.ui.theme.primaryColor
-import kotlinx.coroutines.delay
+import com.example.fluentifyapp.ui.viewmodel.home.HomeScreenViewModel
 
 fun Modifier.shimmerLoadingAnimation(
     widthOfShadowBrush: Int = 500,
@@ -99,14 +106,16 @@ fun Modifier.shimmerLoadingAnimation(
 
 
 @Composable
-fun HomeScreen() {
-    var isLoading by remember { mutableStateOf(true) }
-    val name = "Krishna Poddar"
-
-    LaunchedEffect(key1 = true) {
-        delay(5000) // 5 seconds delay
-        isLoading = false
+fun HomeScreen(
+    viewModel: HomeScreenViewModel
+) {
+    LaunchedEffect(key1 = Unit) {
+        viewModel.init()
     }
+    val isLoading by viewModel.isLoading.collectAsState()
+
+
+
 
     Box(
         modifier = Modifier
@@ -121,7 +130,7 @@ fun HomeScreen() {
             if (isLoading) {
                 ShimmerHomeScreen()
             } else {
-                ActualHomeScreen(name)
+                ActualHomeScreen(viewModel)
             }
         }
     }
@@ -198,47 +207,23 @@ fun ShimmerHomeScreen() {
 }
 
 @Composable
-fun ShimmerEffect(content: @Composable () -> Unit) {
-    val transition = rememberInfiniteTransition()
-    val translateAnim by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1000f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
-        )
-    )
+fun ActualHomeScreen(viewModel: HomeScreenViewModel) {
+    val name by viewModel.name.collectAsState()
+    val currentLesson by viewModel.currentLesson.collectAsState()
+    val currentLessonProgress by viewModel.currentLessonProgress.collectAsState()
+    val currentCourse by viewModel.currentCourseName.collectAsState()
+    val currentCourseProgress by viewModel.currentCourseProgress.collectAsState()
+    val language by viewModel.currentCourseLanguage.collectAsState()
+    val courseDescription by viewModel.currentCourseDescription.collectAsState()
+    val currentLanguage by viewModel.currentLanguage.collectAsState()
 
-    val shimmerColorShades = listOf(
-        Color.LightGray.copy(0.9f),
-        Color.LightGray.copy(0.2f),
-        Color.LightGray.copy(0.9f)
-    )
-
-    val brush = Brush.linearGradient(
-        colors = shimmerColorShades,
-        start = Offset(translateAnim, translateAnim),
-        end = Offset(translateAnim + 100f, translateAnim + 100f),
-        tileMode = TileMode.Mirror
-    )
-
-    Box(modifier = Modifier
-        .fillMaxWidth()
-        .background(brush)
-    ) {
-        content()
-    }
-}
-
-@Composable
-fun ActualHomeScreen(name: String) {
     WelcomeBox(name)
     Spacer(modifier = Modifier.height(16.dp))
-    SpanishProgressBox()
+    currentLanguage?.let { SpanishProgressBox(it, currentCourse, currentCourseProgress,courseDescription) }
     Spacer(modifier = Modifier.height(26.dp))
-    Text("Continue Learning...", fontSize = 18.sp)
+    Text("Continue Learning...", fontSize = 15.sp,fontFamily = AppFonts.quicksand, fontWeight = FontWeight.Bold)
     Spacer(modifier = Modifier.height(16.dp))
-    CuisineProgressBox()
+    CuisineProgressBox(currentCourse, currentLesson, currentLessonProgress)
     Spacer(modifier = Modifier.height(26.dp))
     Text("Explore", fontSize = 26.sp, color = primaryColor, fontFamily = AppFonts.quicksand, fontWeight = FontWeight.Bold)
     Spacer(modifier = Modifier.height(16.dp))
@@ -275,31 +260,45 @@ fun WelcomeBox(name: String) {
 }
 
 @Composable
-fun SpanishProgressBox() {
+fun SpanishProgressBox(
+    currentLanguage: LanguageClass,
+    currentCourse: String,
+    currentCourseProgress: Int,
+    courseDescription: String
+) {
+    var progress by remember { mutableStateOf(0f) }
+
+    LaunchedEffect(key1 = currentCourseProgress) {
+        animate(
+            initialValue = 0f,
+            targetValue = currentCourseProgress.toFloat() / 100f,
+//            targetValue = 90f / 100f,
+            animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing)
+        ) { value, _ ->
+            progress = value
+        }
+    }
     Box(
         contentAlignment = Alignment.Center,
-
         modifier = Modifier
             .fillMaxWidth()
-//            .size(height = 116.dp)
-//            .background(Color(0xFF208787), RoundedCornerShape(17.dp))
             .background(Color(0xFF208787))
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
-                contentAlignment = Alignment.Center, // Center the text in the middle of the CircularProgressIndicator
+                contentAlignment = Alignment.Center,
                 modifier = Modifier.size(74.dp)
             ) {
                 CircularProgressIndicator(
-                    progress = 0.75f,
+                    progress = progress,
                     color = Color.White,
-                    trackColor = Color.Black,
-                    strokeWidth = 7.dp, // Set the thickness here
+                    trackColor = Color(0xFF165E5E),
+                    strokeWidth = 7.dp,
                     modifier = Modifier.size(118.dp)
                 )
                 Text(
-                    text = "75%", // Your desired text
-                    color = Color.White// Choose your preferred text style
+                    text = "${(currentCourseProgress)}%",
+                    color = Color.White
                 )
             }
 
@@ -308,55 +307,65 @@ fun SpanishProgressBox() {
                     .size(224.dp, 116.dp)
                     .padding(16.dp)
             ) {
-                Text("Spanish 🇪🇸", color = Color.White, fontSize = 20.sp, fontFamily = AppFonts.quicksand, fontWeight = FontWeight.Bold )
-                Text("Course: Culture", color = Color.White,fontSize = 10.sp, fontFamily = AppFonts.quicksand, fontWeight = FontWeight.Bold)
-                Text("Culture at your fingertips*", color = Color.White, fontSize = 10.sp, fontFamily = AppFonts.quicksand, fontWeight = FontWeight.Normal)
+                Text("${currentLanguage?.text ?: "Unknown"} ${currentLanguage?.emoji ?: ""}", color = Color.White, fontSize = 20.sp, fontFamily = AppFonts.quicksand, fontWeight = FontWeight.Bold)
+                Text("Course: $currentCourse", color = Color.White, fontSize = 10.sp, fontFamily = AppFonts.quicksand, fontWeight = FontWeight.Bold)
+                Text(courseDescription, color = Color.White, fontSize = 10.sp, fontFamily = AppFonts.quicksand, fontWeight = FontWeight.Normal)
             }
         }
     }
 }
 
 @Composable
-fun CuisineProgressBox() {
+fun CuisineProgressBox(currentCourse: String, currentLesson: String, currentLessonProgress: Int) {
+    var progress by remember { mutableStateOf(0f) }
+
+    LaunchedEffect(key1 = currentLessonProgress) {
+        animate(
+            initialValue = 0f,
+            targetValue = currentLessonProgress.toFloat() / 100f,
+            animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing)
+        ) { value, _ ->
+            progress = value
+        }
+    }
     Box(
         modifier = Modifier
             .fillMaxWidth()
-//            .border(1.dp, borderColor, RoundedCornerShape(17.dp))
             .border(1.dp, borderColor)
             .padding(16.dp)
             .background(backgroundColor)
     ) {
-        Row (
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
-        ){
-            Column {
-                Text("Course: Culture", fontWeight = FontWeight.Bold, fontSize = 15.sp,fontFamily = AppFonts.quicksand)
-                Text("Lesson: Cuisine", fontWeight = FontWeight.Bold, fontSize = 15.sp,fontFamily = AppFonts.quicksand)
-                Text("Lesson Progress:", fontWeight = FontWeight.Bold, fontSize = 15.sp,fontFamily = AppFonts.quicksand)
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(verticalAlignment =Alignment.CenterVertically){
-                    LinearProgressIndicator(
-                        progress = 0.7f,
-                        color = primaryColor, // Set color to the primary color
-                        modifier = Modifier
-                            .size(142.dp, 8.dp) // Set the size of the progress bar
-                            .clip(RoundedCornerShape(3.dp)) // Round the corners by 3 dp
-                    )
-                    Text("70%", fontSize = 10.sp,fontFamily = AppFonts.quicksand, fontWeight = FontWeight.Bold)
-
-                }
-
-
+        Column {
+            Row{
+                Text("Course:", fontWeight = FontWeight.Bold, fontSize = 15.sp, fontFamily = AppFonts.quicksand)
+                Text(" $currentCourse", fontWeight = FontWeight.Bold, fontSize = 15.sp, fontFamily = AppFonts.quicksand, color = primaryColor)
 
             }
-            Image(
-                painter = painterResource(id = R.drawable.ic_launcher_background),
-                contentDescription = "Food and Drink",
-                modifier = Modifier.size(87.dp)
-            )
-        }
+            Row{
+                Text("Lesson:", fontWeight = FontWeight.Bold, fontSize = 15.sp, fontFamily = AppFonts.quicksand)
+                Text(" $currentLesson", fontWeight = FontWeight.Bold, fontSize = 15.sp, fontFamily = AppFonts.quicksand,color= primaryColor)
 
+            }
+            Text("Lesson Progress:", fontWeight = FontWeight.Bold, fontSize = 15.sp, fontFamily = AppFonts.quicksand)
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                LinearProgressIndicator(
+                    progress = progress,
+                    color = primaryColor,
+                    modifier = Modifier
+                        .weight(1f) // This will make it take up all available horizontal space
+                        .height(8.dp) // Set the height of the LinearProgressIndicator
+                        .clip(RoundedCornerShape(3.dp))
+                )
+                Spacer(modifier = Modifier.width(8.dp)) // Add some spacing between the progress bar and the text if needed
+                Text(
+                    text = "${(currentLessonProgress)}%",
+                    fontSize = 10.sp,
+                    fontFamily = AppFonts.quicksand,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
     }
 }
 
@@ -368,42 +377,31 @@ fun LanguageOptions() {
             .height(155.dp)
             .background(backgroundColor)
     ) {
-        LanguageCard("Russian", R.drawable.russia)
-        LanguageCard("Italian", R.drawable.italy)
-        LanguageCard("German", R.drawable.germany)
-        LanguageCard("German", R.drawable.germany)
-        LanguageCard("German", R.drawable.germany)
-        LanguageCard("German", R.drawable.germany)
-        LanguageCard("German", R.drawable.germany)
-    }
-}
-
-@Composable
-fun LanguageCard(language: String, iconResId: Int) {
-    Card(
-        modifier = Modifier
-            .size(106.dp, 139.dp)
-            .padding(end = 8.dp),
-        elevation = CardDefaults.cardElevation(4.dp) // Optional elevation
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-//                .border(1.dp, borderColor, RoundedCornerShape(13.dp))// Set the background color here
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center, // Center the content vertically
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Image(
-                    painter = painterResource(id = iconResId),
-                    contentDescription = language,
-                    modifier = Modifier.size(80.dp)
-                )
-                Text(language)
-            }
+        val langList=LanguageData.getLanguageList()
+        langList.forEach {
+            LanguageCard(language = it.text, flagResId = it.image)
         }
     }
 }
+// Step 1: Define the PreviewParameterProvider
+class LanguageDataProvider : PreviewParameterProvider<LanguagePreviewData> {
+    override val values = sequenceOf(
+        LanguagePreviewData("Russian", R.drawable.russia),
+        LanguagePreviewData("Italian", R.drawable.italy),
+        LanguagePreviewData("German", R.drawable.germany)
+    )
+}
+
+data class LanguagePreviewData(val language: String, val iconResId: Int)
+
+// Step 2: Update the Preview and Composable
+@Preview(showBackground = true)
+@Composable
+fun PreviewLanguageCard(@PreviewParameter(LanguageDataProvider::class) previewData: LanguagePreviewData) {
+    LanguageCard(
+        language = previewData.language,
+        flagResId = previewData.iconResId
+    )
+}
+
+
