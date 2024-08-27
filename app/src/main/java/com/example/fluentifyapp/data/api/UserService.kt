@@ -19,7 +19,7 @@ interface UserService {
     suspend fun getUser(@Path("id") userId: String): UserResponse
 
     @POST("users")
-    suspend fun createUser(@Body userRequest: UserRequest): retrofit2.Response<Unit>
+    suspend fun createUser(@Body userRequest: UserRequest): UserResponse
 
     @PUT("users/{id}")
     suspend fun updateUser(@Path("id") userId: String, @Body userRequest: UserRequest): UserResponse

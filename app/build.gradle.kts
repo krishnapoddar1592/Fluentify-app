@@ -1,4 +1,8 @@
+import java.io.FileInputStream
+import java.util.Properties
 
+val localProperties = Properties()
+localProperties.load(FileInputStream(rootProject.file("local.properties")))
 plugins {
 
     id("com.android.application")
@@ -30,6 +34,7 @@ android {
         }
 
 
+        buildConfigField("String", "BASE_URL", "\"${localProperties.getProperty("BASE_URL")}\"")
     }
 
     buildTypes {

@@ -1,6 +1,5 @@
 package com.example.fluentifyapp.ui.viewmodel.home
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fluentifyapp.data.model.HomeInfo
@@ -9,8 +8,6 @@ import com.example.fluentifyapp.data.repository.AuthRepository
 import com.example.fluentifyapp.data.repository.AuthRepositoryImpl
 import com.example.fluentifyapp.data.repository.UserRepository
 import com.example.fluentifyapp.data.repository.UserRepositoryImpl
-import com.example.fluentifyapp.languages.LanguageClass
-import com.example.fluentifyapp.languages.LanguageData
 import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
@@ -25,12 +22,11 @@ class HomeScreenViewModel @Inject constructor(
     private val authRepository: AuthRepositoryImpl,
     private val userRepository: UserRepositoryImpl,
 ) : ViewModel() {
-    private val TAG = "HomeScreenViewModel"
     private lateinit var user: FirebaseUser
     private lateinit var uid: String
     private lateinit var userResponse: UserResponse
 
-    private val _isLoading = MutableStateFlow(true)
+    private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
     private val _name = MutableStateFlow("")
@@ -51,56 +47,38 @@ class HomeScreenViewModel @Inject constructor(
     private val _currentLessonProgress = MutableStateFlow(0)
     val currentLessonProgress = _currentLessonProgress.asStateFlow()
 
-    private val _currentCourseDescription = MutableStateFlow("")
-    val currentCourseDescription = _currentCourseDescription.asStateFlow()
-
-    private val _currentLanguage = MutableStateFlow<LanguageClass?>(null)
-    val currentLanguage = _currentLanguage.asStateFlow()
-
     fun init() {
-        Log.d(TAG, "init: Starting initialization")
-        _isLoading.value = true
         viewModelScope.launch {
+            _isLoading.value = true
             try {
-                Log.d(TAG, "init: Fetching current user")
+                // Stage 1: Fetch the Firebase user
                 user = authRepository.getCurrentUser() ?: throw Exception("User not logged in")
                 uid = user.uid
-                Log.d(TAG, "init: User fetched, UID: $uid")
 
-                Log.d(TAG, "init: Fetching home info")
-                val homeInfo = userRepository.getHomeInfo(userId = uid)
-                Log.d(TAG, "init: Home info fetched: $homeInfo")
+                // Stage 2: Concurrently make the other API calls after fetching Firebase user
+                val fetchUserDetails = async {
+                /* another API call using uid */
+                    userRepository.getHomeInfo(userId = uid)
+                }
 
-                // Populate the home screen with the fetched data
+                // Await all the other API calls concurrently
+                val results = awaitAll(
+                    fetchUserDetails
+                )
+                val homeInfo = results[0]
+
+                //populate the home screen with the fetched data
+
                 _name.value = homeInfo.name
-                Log.d(TAG, "init: Name updated: ${_name.value}")
-
-                _currentLesson.value = homeInfo.currentLessonName ?: ""
-                Log.d(TAG, "init: Current lesson updated: ${_currentLesson.value}")
-
-                _currentCourseName.value = homeInfo.currentCourseName ?: ""
-                Log.d(TAG, "init: Current course name updated: ${_currentCourseName.value}")
-
-                _currentCourseProgress.value = homeInfo.courseCompletionPercentage
-                Log.d(TAG, "init: Current course progress updated: ${_currentCourseProgress.value}")
-
-                _currentLessonProgress.value = homeInfo.lessonCompletionPercentage
-                Log.d(TAG, "init: Current lesson progress updated: ${_currentLessonProgress.value}")
-
-                _currentCourseDescription.value = homeInfo.currentCourseDescription ?: ""
-                Log.d(TAG, "init: Current course description updated: ${_currentCourseDescription.value}")
-
-                _currentLanguage.value = LanguageData.getLanguage(homeInfo.courseLanguage ?: "")
-                Log.d(TAG, "init: Current language updated: ${_currentLanguage.value}")
-
-
+                _currentLesson.value=homeInfo.currentLessonName
+                _currentCourseName.value=homeInfo.currentCourseName
+                _currentCourseProgress.value=homeInfo.courseCompletionPercentage
+                _currentLessonProgress.value=homeInfo.lessonCompletionPercentage
 
             } catch (e: Exception) {
-                Log.e(TAG, "init: Error occurred", e)
                 // Handle any exceptions that occur during the API calls
             } finally {
                 _isLoading.value = false
-                Log.d(TAG, "init: Initialization completed, isLoading set to false")
             }
         }
     }

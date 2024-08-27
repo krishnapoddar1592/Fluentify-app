@@ -11,12 +11,10 @@ import com.example.fluentifyapp.languages.LanguageData
 import com.example.fluentifyapp.data.repository.AuthRepository
 import com.example.fluentifyapp.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
@@ -118,12 +116,11 @@ class UserDetailsScreenViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                Log.d("UserDetailsViewModel", "Attempting to create user: $username")
+                Log.d("login","$username  $password")
                 val result = authRepository.createUserWithEmailAndPassword(username, password)
                 result.fold(
                     onSuccess = { user ->
                         try {
-                            Log.d("UserDetailsViewModel", "User created successfully, creating user profile")
                             userRepository.createUser(
                                 UserRequest(
                                     user.uid,
@@ -133,25 +130,18 @@ class UserDetailsScreenViewModel @Inject constructor(
                                     _selectedLanguage.value.text
                                 )
                             )
-
-                            Log.d("UserDetailsViewModel", "User profile created successfully")
                             _signupResult.value = SignUpResult.Success("Successfully Signed up")
-                            withContext(Dispatchers.Main) {
-                                _signupSuccess.value = true
-                                Log.d("UserDetailsViewModel", "SignupSuccess set to true")
-                            }
-                        } catch (e: Exception) {
-                            Log.e("UserDetailsViewModel", "Error creating user profile: ${e.message}")
+                            _signupSuccess.value = true
+                        }catch (e:Exception){
                             _signupResult.value = SignUpResult.Error("Error creating user: ${e.message}")
                         }
+
                     },
                     onFailure = { exception ->
-                        Log.e("UserDetailsViewModel", "Authentication failed: ${exception.message}")
                         _signupResult.value = SignUpResult.Error("Authentication failed: ${exception.message}")
                     }
                 )
             } catch (e: Exception) {
-                Log.e("UserDetailsViewModel", "Unexpected error: ${e.message}")
                 _signupResult.value = SignUpResult.Error("Authentication failed: ${e.message}")
             } finally {
                 _isLoading.value = false

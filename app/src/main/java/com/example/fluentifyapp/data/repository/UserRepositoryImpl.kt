@@ -18,17 +18,9 @@ class UserRepositoryImpl @Inject constructor(
         return User(response.userId, response.name, response.email, response.dob,response.language,null,null,response.currentCourse,null)
     }
 
-    override suspend fun createUser(userRequest: UserRequest): Result<Unit> {
-        return try {
-            val response = userService.createUser(userRequest)
-            if (response.isSuccessful) {
-                Result.success(Unit)
-            } else {
-                Result.failure(Exception("Failed to create user: ${response.code()}"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    override suspend fun createUser(userRequest: UserRequest): User {
+        val response = userService.createUser(userRequest)
+        return User(response.userId, response.name, response.email, response.dob,response.language,null,null,response.currentCourse,null)
     }
 
     override suspend fun updateUser(userId: String, userRequest: UserRequest): User {

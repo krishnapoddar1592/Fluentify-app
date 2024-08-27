@@ -21,7 +21,6 @@ import com.example.fluentifyapp.ui.screens.home.HomeScreen
 import com.example.fluentifyapp.ui.screens.login.LoginScreen
 import com.example.fluentifyapp.ui.screens.signup.SignUpScreen
 import com.example.fluentifyapp.ui.screens.signup.UserDetailsScreen
-import com.example.fluentifyapp.ui.viewmodel.home.HomeScreenViewModel
 import com.example.fluentifyapp.ui.viewmodel.login.LoginScreenViewModel
 import com.example.fluentifyapp.ui.viewmodel.signup.SignUpScreenViewModel
 import com.example.fluentifyapp.ui.viewmodel.signup.UserDetailsScreenViewModel
@@ -81,8 +80,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("welcome") {
-                            val viewmodel :HomeScreenViewModel= hiltViewModel()
-                            HomeScreen(viewmodel)
+                            HomeScreen()
                         }
                         composable(
                             "userDetails/{username}/{password}",
