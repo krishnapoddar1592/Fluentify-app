@@ -57,6 +57,9 @@ class HomeScreenViewModel @Inject constructor(
     private val _currentLanguage = MutableStateFlow<LanguageClass?>(null)
     val currentLanguage = _currentLanguage.asStateFlow()
 
+    private val _userId= MutableStateFlow("")
+    val userId = _userId.asStateFlow()
+
     fun init() {
         Log.d(TAG, "init: Starting initialization")
         _isLoading.value = true
@@ -64,11 +67,11 @@ class HomeScreenViewModel @Inject constructor(
             try {
                 Log.d(TAG, "init: Fetching current user")
                 user = authRepository.getCurrentUser() ?: throw Exception("User not logged in")
-                uid = user.uid
-                Log.d(TAG, "init: User fetched, UID: $uid")
+                _userId.value = user.uid
+                Log.d(TAG, "init: User fetched, UID: ${_userId.value}")
 
                 Log.d(TAG, "init: Fetching home info")
-                val homeInfo = userRepository.getHomeInfo(userId = uid)
+                val homeInfo = userRepository.getHomeInfo(userId = _userId.value)
                 Log.d(TAG, "init: Home info fetched: $homeInfo")
 
                 // Populate the home screen with the fetched data

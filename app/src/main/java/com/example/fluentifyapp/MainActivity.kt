@@ -17,17 +17,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.fluentifyapp.ui.screens.home.CourseSelectionScreen
 import com.example.fluentifyapp.ui.screens.home.HomeScreen
 import com.example.fluentifyapp.ui.screens.login.LoginScreen
 import com.example.fluentifyapp.ui.screens.signup.SignUpScreen
 import com.example.fluentifyapp.ui.screens.signup.UserDetailsScreen
+import com.example.fluentifyapp.ui.viewmodel.home.CourseSelectionScreenViewModel
 import com.example.fluentifyapp.ui.viewmodel.home.HomeScreenViewModel
 import com.example.fluentifyapp.ui.viewmodel.login.LoginScreenViewModel
 import com.example.fluentifyapp.ui.viewmodel.signup.SignUpScreenViewModel
 import com.example.fluentifyapp.ui.viewmodel.signup.UserDetailsScreenViewModel
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
-
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -52,7 +53,10 @@ class MainActivity : ComponentActivity() {
                                     Toast.makeText(this@MainActivity, "user not detected", Toast.LENGTH_SHORT).show()
                                     navController.navigate("login")
                                 } else {
-                                    navController.navigate("welcome")
+                                    navController.navigate("welcome") {
+                                        popUpTo(0) { inclusive = true }  // This clears the entire back stack.
+                                        launchSingleTop = true  // Ensures only a single instance of the destination.
+                                    }
                                 }
                             }
                         }
@@ -62,12 +66,16 @@ class MainActivity : ComponentActivity() {
                             LoginScreen(
                                 viewModel = viewModel,
                                 onNavigateToSignUp = { navController.navigate("signup") },
-                                onNavigateAfterLogin = { navController.navigate("welcome") }
+                                onNavigateAfterLogin = {
+                                    navController.navigate("welcome") {
+                                        popUpTo(0) { inclusive = true }  // This clears the entire back stack.
+                                        launchSingleTop = true  // Ensures only a single instance of the destination.
+                                    }
+                                }
                             )
                         }
                         composable("signup") {
                             // Signup screen composable
-                            //make a new file for signup
                             val viewModel:SignUpScreenViewModel= hiltViewModel()
                             SignUpScreen(
                                 viewModel = viewModel,
@@ -82,7 +90,12 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("welcome") {
                             val viewmodel :HomeScreenViewModel= hiltViewModel()
-                            HomeScreen(viewmodel)
+                            HomeScreen(
+                                viewmodel,
+                                onNavigateToCourseRegister = {canGoBack,userId->
+                                    navController.navigate("selectCourse/$canGoBack/$userId")
+                                }
+                            )
                         }
                         composable(
                             "userDetails/{username}/{password}",
@@ -98,8 +111,36 @@ class MainActivity : ComponentActivity() {
                                 viewModel = viewModel,
                                 username = username,
                                 password = password,
-                                onNavigateAfterSignIn = { navController.navigate("welcome") },
+                                onNavigateAfterSignIn = {
+                                    navController.navigate("welcome") {
+                                        popUpTo(0) { inclusive = true }  // This clears the entire back stack.
+                                        launchSingleTop = true  // Ensures only a single instance of the destination.
+                                    } },
+                                onNavigateToCourseRegister = {canGoBack,userId->navController.navigate("selectCourse/$canGoBack/$userId")},
                                 onBackPressed = { navController.navigate("signup") }
+                            )
+                        }
+                        composable("selectCourse/{canGoBack}/{userId}",
+                                arguments = listOf(
+                                navArgument("canGoBack") { type = NavType.BoolType} ,
+                                navArgument("userId") { type = NavType.StringType }
+                        ))
+                        {backStackEntry->
+                            val canGoBack=backStackEntry.arguments?.getBoolean("canGoBack")?:false
+                            val userId=backStackEntry.arguments?.getString("userId")?:""
+                            val viewModel:CourseSelectionScreenViewModel=hiltViewModel()
+                            CourseSelectionScreen(
+
+                                viewModel = viewModel,
+                                onBackPressed = {navController.navigate("welcome")},
+                                onNavigateToHomeScreen = {
+                                    navController.navigate("welcome") {
+                                        popUpTo(0) { inclusive = true }  // This clears the entire back stack.
+                                        launchSingleTop = true  // Ensures only a single instance of the destination.
+                                    }
+                                },
+                                canGoBack=canGoBack,
+                                userId=userId
                             )
                         }
                     }

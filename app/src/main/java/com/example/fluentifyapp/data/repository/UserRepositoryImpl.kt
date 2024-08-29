@@ -35,6 +35,16 @@ class UserRepositoryImpl @Inject constructor(
         val response = userService.updateUser(userId, userRequest)
         return User(response.userId, response.name, response.email, response.dob,response.language,null,null,response.currentCourse,null)
     }
+
+    override suspend fun enrollUserToCourse(userId: String, courseId: Int): Result<Unit> {
+        val response =userService.enrollUserToCourse(userId,courseId)
+        return if (response.isSuccessful) {
+            Result.success(Unit)
+        } else {
+            Result.failure(Exception("Failed to add course: ${response.code()}"))
+        }
+    }
+
     suspend fun getHomeInfo(userId: String): HomeInfo {
         val response=userService.getUserHomeInfo(userId)
         return response

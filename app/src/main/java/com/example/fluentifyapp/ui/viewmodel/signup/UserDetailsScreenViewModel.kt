@@ -43,6 +43,9 @@ class UserDetailsScreenViewModel @Inject constructor(
     private val _signupSuccess = MutableStateFlow(false)
     val signupSuccess = _signupSuccess.asStateFlow()
 
+    private val _uid= MutableStateFlow("")
+    val uid= _uid.asStateFlow()
+
     private lateinit var _username: String
     var username:String
         get() = _username
@@ -122,6 +125,7 @@ class UserDetailsScreenViewModel @Inject constructor(
                 val result = authRepository.createUserWithEmailAndPassword(username, password)
                 result.fold(
                     onSuccess = { user ->
+                        _uid.value=user.uid
                         try {
                             Log.d("UserDetailsViewModel", "User created successfully, creating user profile")
                             userRepository.createUser(
