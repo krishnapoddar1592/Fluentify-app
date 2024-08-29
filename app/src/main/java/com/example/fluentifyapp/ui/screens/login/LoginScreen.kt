@@ -41,6 +41,10 @@ fun LoginScreen(
     val isPasswordVisible by viewModel.isPasswordVisible.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val loginSuccess by viewModel.loginSuccess.collectAsState()
+    val usernameError by viewModel.userNameError.collectAsState()
+    val passwordError by viewModel.passwordError.collectAsState()
+    val isUserNameFilled by viewModel.isUsernameFilled.collectAsState()
+    val isPasswordFilled by viewModel.isPasswordFilled.collectAsState()
 
     LaunchedEffect(loginSuccess) {
         if (loginSuccess) {
@@ -52,12 +56,10 @@ fun LoginScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF4FBFB))
-            .padding(16.dp),
-
+            .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
 
     ) {
-
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
@@ -88,7 +90,7 @@ fun LoginScreen(
                     .padding(top = 36.dp)
                     .border(
                         width = 2.dp,
-                        color = textFieldBorderColor,
+                        if (usernameError != null) Color(0xFFD32F2F) else textFieldBorderColor,
                         shape = RoundedCornerShape(20.dp)
                     )
                     .background(Color.White, shape = RoundedCornerShape(20.dp)),
@@ -100,6 +102,15 @@ fun LoginScreen(
                 textStyle = TextStyle(color = textFieldTextColor, fontSize = 16.sp),
                 singleLine = true,
             )
+            if (usernameError != null) {
+                Text(
+                    text = usernameError!!,
+                    color = Color(0xFFD32F2F),
+                    modifier = Modifier.align(Alignment.Start),
+                    fontFamily = AppFonts.rubik,
+                    fontSize = 14.sp
+                )
+            }
 
             OutlinedTextField(
                 value = password,
@@ -133,11 +144,20 @@ fun LoginScreen(
                     .padding(top = 16.dp)
                     .border(
                         width = 2.dp,
-                        color = textFieldBorderColor,
+                        color = if (passwordError != null) Color(0xFFD32F2F) else textFieldBorderColor,
                         shape = RoundedCornerShape(20.dp)
                     )
                     .background(Color.White, shape = RoundedCornerShape(20.dp)),
             )
+            if (passwordError != null) {
+                Text(
+                    text = passwordError!!,
+                    color = Color(0xFFD32F2F),
+                    modifier = Modifier.align(Alignment.Start),
+                    fontFamily = AppFonts.rubik,
+                    fontSize = 14.sp
+                )
+            }
 
             Text(
                 text = "Forgot your password?",
@@ -153,9 +173,10 @@ fun LoginScreen(
                 onClick = { viewModel.login() },
                 modifier = Modifier
                     .width(192.dp)
-                    .padding(top = 60.dp),
+                    .padding(top = 40.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF208787)),
-                shape = RoundedCornerShape(14.dp)
+                shape = RoundedCornerShape(14.dp),
+                enabled= usernameError==null && passwordError==null && isUserNameFilled && isPasswordFilled
             ) {
                 Text(
                     text = "Login",
@@ -168,7 +189,8 @@ fun LoginScreen(
         }
 
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = "Or",

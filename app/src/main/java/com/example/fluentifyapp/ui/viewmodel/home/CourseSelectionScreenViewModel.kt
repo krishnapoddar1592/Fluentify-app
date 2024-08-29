@@ -8,6 +8,7 @@ import com.example.fluentifyapp.data.repository.CourseRepository
 import com.example.fluentifyapp.data.repository.UserRepository
 import com.example.fluentifyapp.languages.LanguageClass
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,7 +47,9 @@ class CourseSelectionScreenViewModel @Inject constructor(
         _userId.value=uid
         viewModelScope.launch{
             try{
+                delay(3000)
                 _courseSummaryList.value=courseRepository.getCourseSummary()
+
 
             }catch (e:Exception){
                 Log.e(TAG,"Error fetching data ${e.message}")
@@ -65,6 +68,7 @@ class CourseSelectionScreenViewModel @Inject constructor(
                 val result = userRepository.enrollUserToCourse(_userId.value, courseId)
                 result.fold(
                     onSuccess = {
+                        delay(2000)
                         _enrollmentResult.value = CourseEnrollmentResult.Success
                     },
                     onFailure = { exception ->

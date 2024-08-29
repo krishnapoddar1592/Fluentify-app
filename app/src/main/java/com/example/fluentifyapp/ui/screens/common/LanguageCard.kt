@@ -16,16 +16,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -90,7 +87,12 @@ fun LanguageCard(language: String,  flagResId: Int,text:String) {
 }
 
 @Composable
-fun LanguageCard2(viewModel:CourseSelectionScreenViewModel, course: CourseSummaryDTO, flagResId: Int) {
+fun LanguageCard2(
+    viewModel: CourseSelectionScreenViewModel,
+    course: CourseSummaryDTO,
+    flagResId: Int,
+    isEnabled: Boolean
+) {
     Card(
         modifier = Modifier
             .width(152.dp),
@@ -105,8 +107,6 @@ fun LanguageCard2(viewModel:CourseSelectionScreenViewModel, course: CourseSummar
 
         ) {
             Column {
-
-
                 // Language flag and name
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -156,17 +156,17 @@ fun LanguageCard2(viewModel:CourseSelectionScreenViewModel, course: CourseSummar
                     color = Color.Gray
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Description (fixed to 3 lines)
-                Text(
-                    text = course.description,
-                    fontFamily = AppFonts.quicksand,
-                    fontSize = 12.sp,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    lineHeight = 16.sp
-                )
+//                Spacer(modifier = Modifier.height(8.dp))
+//
+//                // Description (fixed to 3 lines)
+//                Text(
+//                    text = course.description,
+//                    fontFamily = AppFonts.quicksand,
+//                    fontSize = 12.sp,
+//                    maxLines = 2,
+//                    overflow = TextOverflow.Ellipsis,
+//                    lineHeight = 16.sp
+//                )
             }
 
 //            Spacer(modifier = Modifier.weight(1f))
@@ -175,10 +175,11 @@ fun LanguageCard2(viewModel:CourseSelectionScreenViewModel, course: CourseSummar
             Button(
                 onClick = { val start=viewModel.startCourse(course.courseId) },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = primaryColor, contentColor = Color.White)
+                colors = ButtonDefaults.buttonColors(containerColor = primaryColor, contentColor = Color.White),
+                enabled = isEnabled && course.noOfLessons>0
             ) {
                 Text(
-                    "Start Course",
+                    text=if(course.noOfLessons>0)"Start Course" else "Coming Soon",
                     fontFamily = AppFonts.quicksand,
                     fontWeight = FontWeight.Bold,
                     fontSize = 12.sp,

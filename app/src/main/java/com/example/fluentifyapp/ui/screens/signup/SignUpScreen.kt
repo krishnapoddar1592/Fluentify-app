@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -76,7 +77,7 @@ fun SignUpScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF4FBFB))
-            .padding(16.dp),
+            .padding(horizontal = 16.dp),
 
         horizontalAlignment = Alignment.CenterHorizontally
 
@@ -200,7 +201,7 @@ fun SignUpScreen(
                 },
                 modifier = Modifier
                     .width(192.dp)
-                    .padding(top = 60.dp),
+                    .padding(top = 40.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF208787)),
                 shape = RoundedCornerShape(14.dp),
                 enabled= usernameError==null && passwordError==null && isUserNameFilled && isPasswordFilled
@@ -216,7 +217,8 @@ fun SignUpScreen(
         }
 
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = "Or",
