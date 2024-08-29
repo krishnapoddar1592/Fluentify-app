@@ -153,7 +153,7 @@ fun ActualCourseScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
 
             ) {
-                courseList.value.chunked(2).forEach { rowCourses ->
+                courseList.value.chunked(1).forEach { rowCourses ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()

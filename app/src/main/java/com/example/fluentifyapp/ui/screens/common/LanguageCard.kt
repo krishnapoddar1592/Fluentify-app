@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -95,96 +97,111 @@ fun LanguageCard2(
 ) {
     Card(
         modifier = Modifier
-            .width(152.dp),
-        elevation = CardDefaults.cardElevation(4.dp),
-        shape = RoundedCornerShape(16.dp)
+            .fillMaxWidth()
+            .height(200.dp)
+            .border(width = 1.dp, color = Color.Black, shape = RoundedCornerShape(8.dp)),
+        elevation = CardDefaults.cardElevation(2.dp),
+        shape = RoundedCornerShape(8.dp)
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.SpaceBetween
-
+                .background(Color.White),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
-                // Language flag and name
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Image(
-                        painter = painterResource(id = flagResId),
-                        contentDescription = "${course.language} flag",
-                        modifier = Modifier
-                            .size(40.dp, 23.dp),
-                        contentScale = ContentScale.Crop
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = course.language,
-                        fontFamily = AppFonts.quicksand,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Course name (limited to 2 lines)
-                Text(
-                    text = course.courseName,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 16.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    lineHeight = 20.sp
+            // Flag image
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .aspectRatio(1.5f)
+                    .padding(8.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = flagResId),
+                    contentDescription = "${course.language} flag",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .border(1.dp, Color.Black),
+                    contentScale = ContentScale.FillBounds
                 )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                // Difficulty and Number of lessons
-                Text(
-                    text = "Difficulty: ${course.difficulty}",
-                    fontFamily = AppFonts.quicksand,
-                    fontSize = 11.sp,
-                    color = Color.Gray
-                )
-                Text(
-                    text = "Lessons: ${course.noOfLessons}",
-                    fontFamily = AppFonts.quicksand,
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
-
-//                Spacer(modifier = Modifier.height(8.dp))
-//
-//                // Description (fixed to 3 lines)
-//                Text(
-//                    text = course.description,
-//                    fontFamily = AppFonts.quicksand,
-//                    fontSize = 12.sp,
-//                    maxLines = 2,
-//                    overflow = TextOverflow.Ellipsis,
-//                    lineHeight = 16.sp
-//                )
             }
 
-//            Spacer(modifier = Modifier.weight(1f))
-
-            // Start button
-            Button(
-                onClick = { val start=viewModel.startCourse(course.courseId) },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = primaryColor, contentColor = Color.White),
-                enabled = isEnabled && course.noOfLessons>0
+            // Content
+            Column(
+                modifier = Modifier
+                    .weight(2f)
+                    .fillMaxHeight()
+                    .padding(vertical = 8.dp, horizontal = 16.dp),
+                verticalArrangement = Arrangement.SpaceAround
             ) {
+                // Language name
                 Text(
-                    text=if(course.noOfLessons>0)"Start Course" else "Coming Soon",
+                    text = course.language,
                     fontFamily = AppFonts.quicksand,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center
+                    fontSize = 24.sp
                 )
+
+                // Course details
+                Column(verticalArrangement = Arrangement.Center) {
+                    Text(
+                        text = course.courseName,
+                        fontFamily = AppFonts.rubik,
+                        fontSize = 14.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = "Difficulty: ${course.difficulty}",
+                        fontFamily = AppFonts.quicksand,
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                    Text(
+                        text = "Lessons: ${course.noOfLessons}",
+                        fontFamily = AppFonts.quicksand,
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+//                    Text(
+//                        text = course.description,
+//                        fontFamily = AppFonts.quicksand,
+//                        fontSize = 12.sp,
+//                        maxLines = 2,
+//                        overflow = TextOverflow.Ellipsis,
+//                        lineHeight = 16.sp
+//                    )
+                }
+
+                // Start button
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+//                        .padding(vertical = 8.dp),
+//                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Button(
+                        onClick = { val start = viewModel.startCourse(course.courseId) },
+                        modifier = Modifier
+                            .fillMaxWidth(0.75f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = primaryColor,
+                            contentColor = Color.White
+                        ),
+                        enabled = isEnabled && course.noOfLessons > 0,
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            text = if (course.noOfLessons > 0) "Start Course" else "Coming Soon",
+                            fontFamily = AppFonts.quicksand,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
             }
         }
     }
