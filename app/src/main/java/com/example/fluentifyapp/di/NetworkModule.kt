@@ -1,5 +1,6 @@
 package com.example.fluentifyapp.di
 
+import com.example.fluentifyapp.data.api.CourseService
 import com.example.fluentifyapp.data.api.UserService
 import dagger.Module
 import dagger.Provides
@@ -57,5 +58,11 @@ object NetworkModule {
     @Singleton
     fun provideUserService(retrofit: Retrofit): UserService {
         return retrofit.create(UserService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCourseService(retrofit: Retrofit): CourseService {
+        return retrofit.create(CourseService::class.java)
     }
 }

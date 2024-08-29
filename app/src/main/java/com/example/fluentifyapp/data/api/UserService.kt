@@ -6,6 +6,7 @@ import com.example.fluentifyapp.data.model.HomeInfo
 import com.example.fluentifyapp.data.model.User
 import com.example.fluentifyapp.data.model.UserRequest
 import com.example.fluentifyapp.data.model.UserResponse
+import okhttp3.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -26,6 +27,9 @@ interface UserService {
 
     @GET("users/{id}/home-info")
     suspend fun getUserHomeInfo(@Path("id") userId: String): HomeInfo
+
+    @POST("users/{id}/courses/{courseId}")
+    suspend fun enrollUserToCourse(@Path("id") userId: String, @Path("courseId") courseId: Int):retrofit2.Response<Unit>
 }
 
 

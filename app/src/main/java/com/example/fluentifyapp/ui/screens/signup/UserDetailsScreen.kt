@@ -3,7 +3,6 @@ package com.example.fluentifyapp.ui.screens.signup
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,16 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.fluentifyapp.R
+import com.example.fluentifyapp.ui.screens.common.HeaderComponent
 import com.example.fluentifyapp.ui.theme.AppFonts
 import com.example.fluentifyapp.ui.theme.textFieldBorderColor
 import com.example.fluentifyapp.ui.theme.textFieldTextColor
@@ -41,7 +35,8 @@ fun UserDetailsScreen(
     username: String,
     password: String,
     onNavigateAfterSignIn: () -> Unit,
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
+    onNavigateToCourseRegister: (Boolean,String)->Unit
 ) {
 
     val name by viewModel.name.collectAsState()
@@ -55,6 +50,7 @@ fun UserDetailsScreen(
     var textFieldSize by remember { mutableStateOf(Size.Zero) }
     var textFieldPosition by remember { mutableStateOf(androidx.compose.ui.geometry.Offset.Zero) }
     val signupSuccess by viewModel.signupSuccess.collectAsState()
+    val uid by viewModel.uid.collectAsState()
     viewModel.username=username;
     viewModel.password=password
 
@@ -68,7 +64,7 @@ fun UserDetailsScreen(
     val context = LocalContext.current
     LaunchedEffect(signupSuccess) {
         if (signupSuccess) {
-            onNavigateAfterSignIn()
+            onNavigateToCourseRegister(false,uid)
         }
     }
 
@@ -110,31 +106,11 @@ fun UserDetailsScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // Top bar with Back Button and Sign Up Title
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.backarrowgreen),
-                    contentDescription = "Back Button",
-                    modifier = Modifier
-                        .size(width = 24.dp, height = 23.dp)
-                        .clickable { onBackPressed() }
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    text = "Sign Up",
-                    fontSize = 18.sp,
-                    fontFamily = AppFonts.rubik,
-                    color = Color(0xFF7B7B7B),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.weight(1f))
-            }
+            HeaderComponent(
+                onBackPressed = onBackPressed,
+                headerText = "Sign Up",
+                canGoBack = true
+            )
 
             // Profile completion title and description
             Text(
@@ -202,6 +178,7 @@ fun UserDetailsScreen(
                         shape = RoundedCornerShape(20.dp)
                     )
 
+
             ) {
                 Text(
                     text = if (dob.isEmpty()) "Select Date of Birth" else dob,
@@ -240,7 +217,8 @@ fun UserDetailsScreen(
                     .width(192.dp)
                     .padding(top = 60.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF208787)),
-                shape = RoundedCornerShape(14.dp)
+                shape = RoundedCornerShape(14.dp),
+                enabled = nameError==null && dobError==null
             ) {
                 Text(
                     text = "Continue",

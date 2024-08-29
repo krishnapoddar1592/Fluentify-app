@@ -1,6 +1,7 @@
 package com.example.fluentifyapp.ui.screens.home
 
 
+import android.util.Log
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -21,14 +22,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
@@ -43,7 +41,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -104,19 +101,15 @@ fun Modifier.shimmerLoadingAnimation(
     }
 }
 
-
 @Composable
 fun HomeScreen(
-    viewModel: HomeScreenViewModel
+    viewModel: HomeScreenViewModel,
+    onNavigateToCourseRegister: (Boolean,String) -> Unit
 ) {
     LaunchedEffect(key1 = Unit) {
         viewModel.init()
     }
     val isLoading by viewModel.isLoading.collectAsState()
-
-
-
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -130,7 +123,7 @@ fun HomeScreen(
             if (isLoading) {
                 ShimmerHomeScreen()
             } else {
-                ActualHomeScreen(viewModel)
+                ActualHomeScreen(viewModel,onNavigateToCourseRegister)
             }
         }
     }
@@ -139,75 +132,60 @@ fun HomeScreen(
 @Composable
 fun ShimmerHomeScreen() {
     Spacer(modifier = Modifier.height(25.dp))
-//    ShimmerEffect {
-        // Placeholder for WelcomeBox
         Box(modifier = Modifier
             .fillMaxWidth()
             .height(82.dp)
             .background(Color.LightGray, RoundedCornerShape(8.dp))
             .shimmerLoadingAnimation()
         )
-//    }
     Spacer(modifier = Modifier.height(16.dp))
-//    ShimmerEffect {
-        // Placeholder for SpanishProgressBox
         Box(modifier = Modifier
             .fillMaxWidth()
             .height(116.dp)
             .background(Color.LightGray, RoundedCornerShape(17.dp))
             .shimmerLoadingAnimation()
         )
-//    }
     Spacer(modifier = Modifier.height(26.dp))
-//    ShimmerEffect {
-        // Placeholder for "Continue Learning..." text
         Box(modifier = Modifier
             .width(200.dp)
             .height(24.dp)
             .background(Color.LightGray, RoundedCornerShape(4.dp))
             .shimmerLoadingAnimation()
         )
-//    }
     Spacer(modifier = Modifier.height(16.dp))
-//    ShimmerEffect {
-        // Placeholder for CuisineProgressBox
-        Box(modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp)
-            .background(Color.LightGray, RoundedCornerShape(17.dp))
-            .shimmerLoadingAnimation()
-        )
-//    }
+    Box(modifier = Modifier
+        .fillMaxWidth()
+        .height(100.dp)
+        .background(Color.LightGray, RoundedCornerShape(17.dp))
+        .shimmerLoadingAnimation()
+    )
     Spacer(modifier = Modifier.height(26.dp))
-//    ShimmerEffect {
-        // Placeholder for "Explore" text
-        Box(modifier = Modifier
-            .width(100.dp)
-            .height(32.dp)
-            .background(Color.LightGray, RoundedCornerShape(4.dp))
-            .shimmerLoadingAnimation()
-        )
-//    }
+    Box(modifier = Modifier
+        .width(100.dp)
+        .height(32.dp)
+        .background(Color.LightGray, RoundedCornerShape(4.dp))
+        .shimmerLoadingAnimation()
+    )
     Spacer(modifier = Modifier.height(16.dp))
-//    ShimmerEffect {
-        // Placeholder for LanguageOptions
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            repeat(3) {
-                Box(modifier = Modifier
-                    .size(106.dp, 139.dp)
-                    .background(Color.LightGray, RoundedCornerShape(13.dp))
-                    .shimmerLoadingAnimation()
-                )
-            }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        repeat(3) {
+            Box(modifier = Modifier
+                .size(106.dp, 139.dp)
+                .background(Color.LightGray, RoundedCornerShape(13.dp))
+                .shimmerLoadingAnimation()
+            )
         }
-//    }
+    }
 }
 
 @Composable
-fun ActualHomeScreen(viewModel: HomeScreenViewModel) {
+fun ActualHomeScreen(
+    viewModel: HomeScreenViewModel,
+    onNavigateToCourseRegister: (Boolean, String) -> Unit
+) {
     val name by viewModel.name.collectAsState()
     val currentLesson by viewModel.currentLesson.collectAsState()
     val currentLessonProgress by viewModel.currentLessonProgress.collectAsState()
@@ -217,13 +195,22 @@ fun ActualHomeScreen(viewModel: HomeScreenViewModel) {
     val courseDescription by viewModel.currentCourseDescription.collectAsState()
     val currentLanguage by viewModel.currentLanguage.collectAsState()
 
+    Log.d("HomeScreenViewModel","$currentCourse  ${currentCourse.isEmpty()}")
+
+    LaunchedEffect(key1 = currentCourse) {
+        if (currentCourse.isEmpty()) {
+            onNavigateToCourseRegister(false,viewModel.userId.value)
+        }
+    }
+
+
     WelcomeBox(name)
     Spacer(modifier = Modifier.height(16.dp))
-    currentLanguage?.let { SpanishProgressBox(it, currentCourse, currentCourseProgress,courseDescription) }
+    currentLanguage?.let { CourseProgressBox(it, currentCourse, currentCourseProgress,courseDescription) }
     Spacer(modifier = Modifier.height(26.dp))
     Text("Continue Learning...", fontSize = 15.sp,fontFamily = AppFonts.quicksand, fontWeight = FontWeight.Bold)
     Spacer(modifier = Modifier.height(16.dp))
-    CuisineProgressBox(currentCourse, currentLesson, currentLessonProgress)
+    LessonProgressBox(currentCourse, currentLesson, currentLessonProgress)
     Spacer(modifier = Modifier.height(26.dp))
     Text("Explore", fontSize = 26.sp, color = primaryColor, fontFamily = AppFonts.quicksand, fontWeight = FontWeight.Bold)
     Spacer(modifier = Modifier.height(16.dp))
@@ -260,7 +247,7 @@ fun WelcomeBox(name: String) {
 }
 
 @Composable
-fun SpanishProgressBox(
+fun CourseProgressBox(
     currentLanguage: LanguageClass,
     currentCourse: String,
     currentCourseProgress: Int,
@@ -316,7 +303,7 @@ fun SpanishProgressBox(
 }
 
 @Composable
-fun CuisineProgressBox(currentCourse: String, currentLesson: String, currentLessonProgress: Int) {
+fun LessonProgressBox(currentCourse: String, currentLesson: String, currentLessonProgress: Int) {
     var progress by remember { mutableStateOf(0f) }
 
     LaunchedEffect(key1 = currentLessonProgress) {
@@ -379,7 +366,7 @@ fun LanguageOptions() {
     ) {
         val langList=LanguageData.getLanguageList()
         langList.forEach {
-            LanguageCard(language = it.text, flagResId = it.image)
+            LanguageCard(language = it.text, flagResId = it.image,"")
         }
     }
 }
@@ -400,7 +387,8 @@ data class LanguagePreviewData(val language: String, val iconResId: Int)
 fun PreviewLanguageCard(@PreviewParameter(LanguageDataProvider::class) previewData: LanguagePreviewData) {
     LanguageCard(
         language = previewData.language,
-        flagResId = previewData.iconResId
+        flagResId = previewData.iconResId,
+        ""
     )
 }
 
