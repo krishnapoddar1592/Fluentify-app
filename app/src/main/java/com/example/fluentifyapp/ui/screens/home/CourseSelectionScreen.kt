@@ -28,6 +28,7 @@ import com.example.fluentifyapp.languages.LanguageData
 import com.example.fluentifyapp.ui.screens.common.HeaderComponent
 import com.example.fluentifyapp.ui.screens.common.LanguageCard2
 import com.example.fluentifyapp.ui.theme.backgroundColor
+import com.example.fluentifyapp.ui.theme.primaryColor
 import com.example.fluentifyapp.ui.viewmodel.home.CourseSelectionScreenViewModel
 
 
@@ -67,16 +68,36 @@ fun CourseSelectionScreen(
 
 @Composable
 fun ShimmerCourseScreen() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    Column(
+        modifier = Modifier.fillMaxSize()
     ) {
-        repeat(3) {
-            Box(modifier = Modifier
-                .size(106.dp, 139.dp)
-                .background(Color.LightGray, RoundedCornerShape(13.dp))
+        // Shimmer effect for header
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(30.dp)
+                .background(Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(13.dp))
                 .shimmerLoadingAnimation()
-            )
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Shimmer effect for language cards grid
+        repeat(3) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                repeat(2) {
+                    Box(
+                        modifier = Modifier
+                            .size(width = 152.dp, height = 220.dp)
+                            .background(Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+                            .shimmerLoadingAnimation()
+                    )
+                }
+            }
         }
     }
 }
@@ -111,54 +132,62 @@ fun ActualCourseScreen(
             }
         }
     }
-    if (isLoading) {
-        // Show loading indicator
-        CircularProgressIndicator()
-    } else {
-        // Your normal screen content
-        // ...
-        Box(modifier = Modifier.fillMaxSize()) {
+    // Your normal screen content
+    // ...
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(backgroundColor),
+//                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            HeaderComponent(onBackPressed = onBackPressed, headerText = "Explore", canGoBack)
+            Spacer(modifier = Modifier.height(16.dp))
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(backgroundColor),
-//                .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                HeaderComponent(onBackPressed = onBackPressed, headerText = "Explore", canGoBack)
-                Spacer(modifier = Modifier.height(16.dp))
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState()),
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState()),
 //                    .padding(top = 16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally
 
-                ) {
-                    courseList.value.chunked(2).forEach { rowCourses ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            rowCourses.forEach { course ->
-                                LanguageCard2(
-                                    viewModel=viewModel,
-                                    course = course,
-                                    flagResId = LanguageData.getLangFlag(course.language),
+            ) {
+                courseList.value.chunked(2).forEach { rowCourses ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        rowCourses.forEach { course ->
+                            LanguageCard2(
+                                viewModel=viewModel,
+                                course = course,
+                                flagResId = LanguageData.getLangFlag(course.language),
+                                isEnabled=!isLoading
 
 //                                modifier = Modifier.weight(1f)
-                                )
-                            }
+                            )
                         }
                     }
                 }
             }
         }
-
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White.copy(alpha = 0.5f))
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = primaryColor
+                )
+            }
+        }
     }
+
 
 
 }
