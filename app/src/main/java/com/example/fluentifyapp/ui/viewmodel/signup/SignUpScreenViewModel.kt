@@ -41,14 +41,21 @@ class SignUpScreenViewModel @Inject constructor(
     private val _passwordError = MutableStateFlow<String?>(null)
     val passwordError: StateFlow<String?> = _passwordError
 
+    private val _isUsernameFilled = MutableStateFlow<Boolean>(false)
+    val isUsernameFilled: StateFlow<Boolean> = _isUsernameFilled
+
+    private val _isPasswordFilled = MutableStateFlow<Boolean>(false)
+    val isPasswordFilled: StateFlow<Boolean> = _isPasswordFilled
 
 
     fun setUsername(value: String) {
+        _isUsernameFilled.value = true
         _username.value = value
         validateUsername(value)
     }
 
     fun setPassword(value: String) {
+        _isPasswordFilled.value=true
         _password.value = value
         validatePassword(value)
     }
@@ -113,9 +120,6 @@ class SignUpScreenViewModel @Inject constructor(
         // Implement forgot password logic here
     }
 
-    fun navigateToSignUp() {
-        // Implement navigation to sign up screen
-    }
 
     companion object {
         private const val TAG = "SignUpScreenViewModel"
