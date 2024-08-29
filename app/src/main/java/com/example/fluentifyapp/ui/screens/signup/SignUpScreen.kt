@@ -61,6 +61,8 @@ fun SignUpScreen(
     val signupSuccess by viewModel.signupSuccess.collectAsState()
     val usernameError by viewModel.userNameError.collectAsState()
     val passwordError by viewModel.passwordError.collectAsState()
+    val isUserNameFilled by viewModel.isUsernameFilled.collectAsState()
+    val isPasswordFilled by viewModel.isPasswordFilled.collectAsState()
 
 
 
@@ -201,7 +203,7 @@ fun SignUpScreen(
                     .padding(top = 60.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF208787)),
                 shape = RoundedCornerShape(14.dp),
-                enabled= usernameError==null && passwordError==null
+                enabled= usernameError==null && passwordError==null && isUserNameFilled && isPasswordFilled
             ) {
                 Text(
                     text = "Sign Up",

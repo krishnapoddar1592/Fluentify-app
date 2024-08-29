@@ -46,6 +46,12 @@ class UserDetailsScreenViewModel @Inject constructor(
     private val _uid= MutableStateFlow("")
     val uid= _uid.asStateFlow()
 
+    private val _isNameFilled = MutableStateFlow<Boolean>(false)
+    val isNameFilled: StateFlow<Boolean> = _isNameFilled
+
+    private val _isDobFilled = MutableStateFlow<Boolean>(false)
+    val isDobFilled: StateFlow<Boolean> = _isDobFilled
+
     private lateinit var _username: String
     var username:String
         get() = _username
@@ -86,6 +92,7 @@ class UserDetailsScreenViewModel @Inject constructor(
     val dobError: StateFlow<String?> = _dobError
 
     fun setName(newName: String) {
+        _isNameFilled.value=true
         _name.value = newName
         validateName(newName)
     }
@@ -99,6 +106,7 @@ class UserDetailsScreenViewModel @Inject constructor(
             val selectedDate = LocalDate.parse(newDob, formatter)
             val currentDate = LocalDate.now()
             if (selectedDate.isBefore(currentDate)) {
+                _isDobFilled.value=true
                 _dob.value = newDob
                 _dobError.value = null
             } else {

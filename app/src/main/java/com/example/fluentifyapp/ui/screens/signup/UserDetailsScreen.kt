@@ -51,6 +51,9 @@ fun UserDetailsScreen(
     var textFieldPosition by remember { mutableStateOf(androidx.compose.ui.geometry.Offset.Zero) }
     val signupSuccess by viewModel.signupSuccess.collectAsState()
     val uid by viewModel.uid.collectAsState()
+    val isNameFilled by viewModel.isNameFilled.collectAsState()
+    val isDobFilled by viewModel.isDobFilled.collectAsState()
+
     viewModel.username=username;
     viewModel.password=password
 
@@ -218,7 +221,7 @@ fun UserDetailsScreen(
                     .padding(top = 60.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF208787)),
                 shape = RoundedCornerShape(14.dp),
-                enabled = nameError==null && dobError==null
+                enabled = nameError==null && dobError==null && isNameFilled && isDobFilled
             ) {
                 Text(
                     text = "Continue",
