@@ -115,4 +115,6 @@ dependencies {
 
     // OkHttp Logging Interceptor
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+
+    implementation("eu.bambooapps:compose-material3-pullrefresh:1.0.0")
 }

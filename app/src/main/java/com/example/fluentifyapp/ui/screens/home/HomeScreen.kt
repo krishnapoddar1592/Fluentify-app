@@ -7,6 +7,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -25,10 +26,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,14 +46,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fluentifyapp.R
@@ -60,6 +70,10 @@ import com.example.fluentifyapp.ui.theme.backgroundColor
 import com.example.fluentifyapp.ui.theme.borderColor
 import com.example.fluentifyapp.ui.theme.primaryColor
 import com.example.fluentifyapp.ui.viewmodel.home.HomeScreenViewModel
+import eu.bambooapps.material3.pullrefresh.PullRefreshIndicator
+import eu.bambooapps.material3.pullrefresh.pullRefresh
+import eu.bambooapps.material3.pullrefresh.rememberPullRefreshState
+import kotlinx.coroutines.delay
 
 fun Modifier.shimmerLoadingAnimation(
     widthOfShadowBrush: Int = 500,
@@ -101,30 +115,59 @@ fun Modifier.shimmerLoadingAnimation(
     }
 }
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeScreenViewModel,
-    onNavigateToCourseRegister: (Boolean,String) -> Unit
+    onNavigateToCourseRegister: (Boolean, String) -> Unit
 ) {
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    val state = rememberPullRefreshState(
+        refreshing = isRefreshing,
+        onRefresh = {
+            isRefreshing = true
+            viewModel.init()
+        }
+    )
+
+    val isLoading by viewModel.isLoading.collectAsState()
+
     LaunchedEffect(key1 = Unit) {
         viewModel.init()
     }
-    val isLoading by viewModel.isLoading.collectAsState()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(backgroundColor)
+            .pullRefresh(state)
     ) {
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            if (isLoading) {
-                ShimmerHomeScreen()
-            } else {
-                ActualHomeScreen(viewModel,onNavigateToCourseRegister)
+            item {
+                if (isLoading || isRefreshing) {
+                    ShimmerHomeScreen()
+                } else {
+                    ActualHomeScreen(viewModel, onNavigateToCourseRegister)
+                }
             }
+        }
+
+        PullRefreshIndicator(
+            refreshing = isRefreshing,
+            state = state,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
+    }
+
+    LaunchedEffect(isLoading) {
+        if (!isLoading) {
+            isRefreshing = false
         }
     }
 }
