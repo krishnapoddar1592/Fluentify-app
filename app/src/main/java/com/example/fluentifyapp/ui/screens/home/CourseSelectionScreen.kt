@@ -16,10 +16,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,8 +34,12 @@ import com.example.fluentifyapp.ui.screens.common.LanguageCard2
 import com.example.fluentifyapp.ui.theme.backgroundColor
 import com.example.fluentifyapp.ui.theme.primaryColor
 import com.example.fluentifyapp.ui.viewmodel.home.CourseSelectionScreenViewModel
+import eu.bambooapps.material3.pullrefresh.PullRefreshIndicator
+import eu.bambooapps.material3.pullrefresh.pullRefresh
+import eu.bambooapps.material3.pullrefresh.rememberPullRefreshState
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CourseSelectionScreen(
     viewModel: CourseSelectionScreenViewModel,
@@ -40,6 +48,15 @@ fun CourseSelectionScreen(
     canGoBack: Boolean = false,
     userId:String=""
 ) {
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    val state = rememberPullRefreshState(
+        refreshing = isRefreshing,
+        onRefresh = {
+            isRefreshing = true
+            viewModel.init(userId)
+        }
+    )
 
     LaunchedEffect(key1 = Unit) {
         viewModel.init(userId)
@@ -49,6 +66,7 @@ fun CourseSelectionScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(backgroundColor)
+            .pullRefresh(state)
     ) {
         Column(
             modifier = Modifier
@@ -61,9 +79,18 @@ fun CourseSelectionScreen(
                 ActualCourseScreen(viewModel,onBackPressed,canGoBack,onNavigateToHomeScreen)
             }
         }
+        PullRefreshIndicator(
+            refreshing = isRefreshing,
+            state = state,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
     }
 
-
+    LaunchedEffect(isLoading) {
+        if (!isLoading) {
+            isRefreshing = false
+        }
+    }
 }
 
 @Composable
