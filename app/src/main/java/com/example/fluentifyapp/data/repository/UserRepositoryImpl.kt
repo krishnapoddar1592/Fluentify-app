@@ -1,10 +1,12 @@
 package com.example.fluentifyapp.data.repository
 
 import com.example.fluentifyapp.data.api.UserService
+import com.example.fluentifyapp.data.model.CourseSummaryDTO
 import com.example.fluentifyapp.data.model.HomeInfo
 import com.example.fluentifyapp.data.model.User
 import com.example.fluentifyapp.data.model.UserRequest
 import com.google.firebase.auth.FirebaseAuth
+import retrofit2.HttpException
 import javax.inject.Inject
 
 
@@ -45,9 +47,22 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    suspend fun getHomeInfo(userId: String): HomeInfo {
+    override suspend fun getHomeInfo(userId: String): HomeInfo {
         val response=userService.getUserHomeInfo(userId)
         return response
+    }
+
+    override suspend fun getNewCoursesForUser(userId: String): Result<List<CourseSummaryDTO>> {
+        return try {
+            val response = userService.getNewCoursesForUser(userId)
+            if (response.isSuccessful) {
+                Result.success(response.body() ?: emptyList())
+            } else {
+                Result.failure(HttpException(response))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
 }

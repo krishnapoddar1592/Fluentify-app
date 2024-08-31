@@ -48,7 +48,12 @@ class CourseSelectionScreenViewModel @Inject constructor(
         viewModelScope.launch{
             try{
                 delay(3000)
-                _courseSummaryList.value=courseRepository.getCourseSummary()
+                val result = userRepository.getNewCoursesForUser(_userId.value)
+                result.onSuccess { courses ->
+                    _courseSummaryList.value = courses
+                }.onFailure { error ->
+                    // Handle error, maybe update a error message state
+                }
 
 
             }catch (e:Exception){

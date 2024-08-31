@@ -35,6 +35,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -133,9 +134,15 @@ fun HomeScreen(
     )
 
     val isLoading by viewModel.isLoading.collectAsState()
+    val currentCourse by viewModel.currentCourseName.collectAsState()
 
     LaunchedEffect(key1 = Unit) {
         viewModel.init()
+    }
+    LaunchedEffect(key1 = currentCourse , key2 = !isLoading) {
+        if (currentCourse.isEmpty() && !isLoading) {
+            onNavigateToCourseRegister(false,viewModel.userId.value)
+        }
     }
 
     Box(
@@ -257,7 +264,7 @@ fun ActualHomeScreen(
     Spacer(modifier = Modifier.height(26.dp))
     Text("Explore", fontSize = 26.sp, color = primaryColor, fontFamily = AppFonts.quicksand, fontWeight = FontWeight.Bold)
     Spacer(modifier = Modifier.height(16.dp))
-    LanguageOptions()
+    LanguageOptions(onNavigateToCourseRegister,viewModel)
 }
 
 @Composable
@@ -303,7 +310,7 @@ fun CourseProgressBox(
             initialValue = 0f,
             targetValue = currentCourseProgress.toFloat() / 100f,
 //            targetValue = 90f / 100f,
-            animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing)
+            animationSpec = tween(durationMillis = 1200, easing = FastOutSlowInEasing)
         ) { value, _ ->
             progress = value
         }
@@ -353,7 +360,7 @@ fun LessonProgressBox(currentCourse: String, currentLesson: String, currentLesso
         animate(
             initialValue = 0f,
             targetValue = currentLessonProgress.toFloat() / 100f,
-            animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing)
+            animationSpec = tween(durationMillis = 1200, easing = FastOutSlowInEasing)
         ) { value, _ ->
             progress = value
         }
@@ -400,16 +407,38 @@ fun LessonProgressBox(currentCourse: String, currentLesson: String, currentLesso
 }
 
 @Composable
-fun LanguageOptions() {
-    Row(
+fun LanguageOptions(onNavigateToCourseRegister: (Boolean, String) -> Unit, viewModel: HomeScreenViewModel) {
+    Box(
         modifier = Modifier
-            .horizontalScroll(rememberScrollState())
-            .height(155.dp)
+            .height(200.dp)
             .background(backgroundColor)
     ) {
-        val langList=LanguageData.getLanguageList()
-        langList.forEach {
-            LanguageCard(language = it.text, flagResId = it.image,"")
+        Column {
+            Row(
+                modifier = Modifier
+                    .height(155.dp)
+                    .fillMaxWidth()
+            ) {
+                val langList = LanguageData.getLanguageList()
+                langList.take(3).forEach {
+                    LanguageCard(language = it.text, flagResId = it.image, "")
+                }
+            }
+        }
+
+        TextButton(
+            onClick =  { onNavigateToCourseRegister(true, viewModel.userId.value) },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(bottom = 8.dp)
+        ) {
+            Text(
+                "View More...",
+                color = primaryColor,
+                fontSize = 14.sp,
+                fontFamily = AppFonts.quicksand,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
