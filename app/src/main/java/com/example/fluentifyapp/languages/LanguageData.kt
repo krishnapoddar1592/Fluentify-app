@@ -34,4 +34,9 @@ object LanguageData {
     fun getLangFlag(lang:String):Int{
         return getLanguageList().find { it.text.toLowerCase() == lang.toLowerCase() }?.image!!
     }
+
+    fun getLangEmoji(lang:String):String{
+        return getLanguageList().find { it.text.toLowerCase() == lang.toLowerCase() }?.emoji!!
+
+    }
 }

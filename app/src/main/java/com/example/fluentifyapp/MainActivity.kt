@@ -17,6 +17,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.fluentifyapp.ui.screens.course.LessonStartScreen
 import com.example.fluentifyapp.ui.screens.home.CourseSelectionScreen
 import com.example.fluentifyapp.ui.screens.home.HomeScreen
 import com.example.fluentifyapp.ui.screens.login.LoginScreen
@@ -94,7 +95,8 @@ class MainActivity : ComponentActivity() {
                                 viewmodel,
                                 onNavigateToCourseRegister = {canGoBack,userId->
                                     navController.navigate("selectCourse/$canGoBack/$userId")
-                                }
+                                },
+                                onNavigateToLesson = {navController.navigate("lesson")}
                             )
                         }
                         composable(
@@ -142,6 +144,9 @@ class MainActivity : ComponentActivity() {
                                 canGoBack=canGoBack,
                                 userId=userId
                             )
+                        }
+                        composable("lesson"){
+                            LessonStartScreen()
                         }
                     }
                 }
