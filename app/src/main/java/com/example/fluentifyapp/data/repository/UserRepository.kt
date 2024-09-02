@@ -2,6 +2,7 @@ package com.example.fluentifyapp.data.repository
 
 import com.example.fluentifyapp.data.model.CourseSummaryDTO
 import com.example.fluentifyapp.data.model.HomeInfo
+import com.example.fluentifyapp.data.model.LessonProgressDTO
 import com.example.fluentifyapp.data.model.User
 import com.example.fluentifyapp.data.model.UserRequest
 
@@ -13,4 +14,5 @@ interface UserRepository {
     suspend fun enrollUserToCourse(userId: String, courseId: Int): Result<Unit>
     suspend fun getHomeInfo(userId: String): HomeInfo
     suspend fun getNewCoursesForUser(userId: String): Result<List<CourseSummaryDTO>>
+    suspend fun getLessonStartInfo(userId: String, courseId: Int, lessonId: Int): Result<LessonProgressDTO>
 }

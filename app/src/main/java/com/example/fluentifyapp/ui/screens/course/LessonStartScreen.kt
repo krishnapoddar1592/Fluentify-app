@@ -1,6 +1,7 @@
 package com.example.fluentifyapp.ui.screens.course
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -11,12 +12,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PaintingStyle
+import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -70,23 +75,36 @@ fun LessonStartScreen() {
 
             Spacer(modifier = Modifier.height(baseSpacing))
 
-            Image(
-                painter = painterResource(id = R.drawable.france_circular),
-                contentDescription = "French language image",
+            Box(
                 modifier = Modifier
                     .size(180.dp)
-                    .clip(CircleShape)
-                    .shadow(4.dp, shape = CircleShape, clip = true),
-                contentScale = ContentScale.Crop
-            )
+                    .shadow(
+                        elevation = 8.dp, // Creates a shadow with elevation
+                        shape = CircleShape, // Ensures the shadow follows the circle shape
+                        clip = false // Makes sure the shadow isn't clipped to the shape
+                    )
+                    .clip(CircleShape) // Clips the image to a circle shape
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.france_circular),
+                    contentDescription = "French language image",
+                    modifier = Modifier
+                        .size(180.dp)
+                        .clip(CircleShape), // Ensures the image itself is circular
+                    contentScale = ContentScale.Crop
+                )
+            }
 
             Spacer(modifier = Modifier.height(halfSpacing))
 
             Text(
-                text = "${LanguageData.getLangEmoji("French")} Letters",
+                text = "${LanguageData.getLangEmoji("French")} Letters Letters Letters Letters Letters",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center
+
             )
 
             Spacer(modifier = Modifier.height(halfSpacing))
