@@ -38,10 +38,6 @@ class CourseSelectionScreenViewModel @Inject constructor(
     private val _enrollmentResult = MutableStateFlow<CourseEnrollmentResult?>(null)
     val enrollmentResult: StateFlow<CourseEnrollmentResult?> = _enrollmentResult
 
-
-
-
-
     fun init(uid:String){
         _isLoading.value=true
         _userId.value=uid

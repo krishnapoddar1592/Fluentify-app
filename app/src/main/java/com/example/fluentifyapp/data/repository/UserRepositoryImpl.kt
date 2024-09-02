@@ -3,6 +3,7 @@ package com.example.fluentifyapp.data.repository
 import com.example.fluentifyapp.data.api.UserService
 import com.example.fluentifyapp.data.model.CourseSummaryDTO
 import com.example.fluentifyapp.data.model.HomeInfo
+import com.example.fluentifyapp.data.model.LessonProgressDTO
 import com.example.fluentifyapp.data.model.User
 import com.example.fluentifyapp.data.model.UserRequest
 import com.google.firebase.auth.FirebaseAuth
@@ -62,6 +63,24 @@ class UserRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    override suspend fun getLessonStartInfo(
+        userId: String,
+        courseId: Int,
+        lessonId: Int
+    ): Result<LessonProgressDTO> {
+        return try{
+            val response=userService.getLessonStartPageData(userId,courseId,lessonId)
+            if(response.isSuccessful){
+                Result.success(response.body() ?: LessonProgressDTO(0,0,"","","","",0,0))
+            }else {
+                Result.failure(HttpException(response))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+
         }
     }
 

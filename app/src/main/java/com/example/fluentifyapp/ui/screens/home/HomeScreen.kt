@@ -14,6 +14,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,6 +31,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
@@ -48,9 +51,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -121,7 +126,8 @@ fun Modifier.shimmerLoadingAnimation(
 @Composable
 fun HomeScreen(
     viewModel: HomeScreenViewModel,
-    onNavigateToCourseRegister: (Boolean, String) -> Unit
+    onNavigateToCourseRegister: (Boolean, String) -> Unit,
+    onNavigateToLesson: () -> Unit
 ) {
     var isRefreshing by remember { mutableStateOf(false) }
 
@@ -160,7 +166,7 @@ fun HomeScreen(
                 if (isLoading || isRefreshing) {
                     ShimmerHomeScreen()
                 } else {
-                    ActualHomeScreen(viewModel, onNavigateToCourseRegister)
+                    ActualHomeScreen(viewModel, onNavigateToCourseRegister,onNavigateToLesson)
                 }
             }
         }
@@ -234,7 +240,8 @@ fun ShimmerHomeScreen() {
 @Composable
 fun ActualHomeScreen(
     viewModel: HomeScreenViewModel,
-    onNavigateToCourseRegister: (Boolean, String) -> Unit
+    onNavigateToCourseRegister: (Boolean, String) -> Unit,
+    onNavigateToLesson: () -> Unit
 ) {
     val name by viewModel.name.collectAsState()
     val currentLesson by viewModel.currentLesson.collectAsState()
@@ -260,7 +267,7 @@ fun ActualHomeScreen(
     Spacer(modifier = Modifier.height(26.dp))
     Text("Continue Learning...", fontSize = 15.sp,fontFamily = AppFonts.quicksand, fontWeight = FontWeight.Bold)
     Spacer(modifier = Modifier.height(16.dp))
-    LessonProgressBox(currentCourse, currentLesson, currentLessonProgress)
+    LessonProgressBox(currentCourse, currentLesson, currentLessonProgress,onNavigateToLesson)
     Spacer(modifier = Modifier.height(26.dp))
     Text("Explore", fontSize = 26.sp, color = primaryColor, fontFamily = AppFonts.quicksand, fontWeight = FontWeight.Bold)
     Spacer(modifier = Modifier.height(16.dp))
@@ -287,7 +294,7 @@ fun WelcomeBox(name: String) {
             )
         }
         Image(
-            painter = painterResource(id = R.drawable.ic_launcher_background),
+            painter = painterResource(id = R.drawable.avatar),
             contentDescription = "User",
             modifier = Modifier
                 .size(50.dp)
@@ -353,7 +360,7 @@ fun CourseProgressBox(
 }
 
 @Composable
-fun LessonProgressBox(currentCourse: String, currentLesson: String, currentLessonProgress: Int) {
+fun LessonProgressBox(currentCourse: String, currentLesson: String, currentLessonProgress: Int, onNavigateToLesson: () -> Unit) {
     var progress by remember { mutableStateOf(0f) }
 
     LaunchedEffect(key1 = currentLessonProgress) {
@@ -365,42 +372,76 @@ fun LessonProgressBox(currentCourse: String, currentLesson: String, currentLesso
             progress = value
         }
     }
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, borderColor)
-            .padding(16.dp)
-            .background(backgroundColor)
+    Card(
+        elevation = CardDefaults.cardElevation(4.dp), // Adjust the elevation value as needed
+        modifier = Modifier.fillMaxWidth().clickable { onNavigateToLesson() } ,
+        shape = RectangleShape// Optional padding to prevent content clipping
     ) {
-        Column {
-            Row{
-                Text("Course:", fontWeight = FontWeight.Bold, fontSize = 15.sp, fontFamily = AppFonts.quicksand)
-                Text(" $currentCourse", fontWeight = FontWeight.Bold, fontSize = 15.sp, fontFamily = AppFonts.quicksand, color = primaryColor)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, borderColor)
+//                .padding(16.dp)
+                .background(Color.White)
 
-            }
-            Row{
-                Text("Lesson:", fontWeight = FontWeight.Bold, fontSize = 15.sp, fontFamily = AppFonts.quicksand)
-                Text(" $currentLesson", fontWeight = FontWeight.Bold, fontSize = 15.sp, fontFamily = AppFonts.quicksand,color= primaryColor)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row {
+                    Text(
+                        "Course:",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        fontFamily = AppFonts.quicksand
+                    )
+                    Text(
+                        " $currentCourse",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        fontFamily = AppFonts.quicksand,
+                        color = primaryColor
+                    )
 
-            }
-            Text("Lesson Progress:", fontWeight = FontWeight.Bold, fontSize = 15.sp, fontFamily = AppFonts.quicksand)
-            Spacer(modifier = Modifier.height(4.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                LinearProgressIndicator(
-                    progress = progress,
-                    color = primaryColor,
-                    modifier = Modifier
-                        .weight(1f) // This will make it take up all available horizontal space
-                        .height(8.dp) // Set the height of the LinearProgressIndicator
-                        .clip(RoundedCornerShape(3.dp))
-                )
-                Spacer(modifier = Modifier.width(8.dp)) // Add some spacing between the progress bar and the text if needed
+                }
+                Row {
+                    Text(
+                        "Lesson:",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        fontFamily = AppFonts.quicksand
+                    )
+                    Text(
+                        " $currentLesson",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        fontFamily = AppFonts.quicksand,
+                        color = primaryColor
+                    )
+
+                }
                 Text(
-                    text = "${(currentLessonProgress)}%",
-                    fontSize = 10.sp,
-                    fontFamily = AppFonts.quicksand,
-                    fontWeight = FontWeight.Bold
+                    "Lesson Progress:",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    fontFamily = AppFonts.quicksand
                 )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    LinearProgressIndicator(
+                        progress = progress,
+                        color = primaryColor,
+                        modifier = Modifier
+                            .weight(1f) // This will make it take up all available horizontal space
+                            .height(8.dp) // Set the height of the LinearProgressIndicator
+                            .clip(RoundedCornerShape(3.dp))
+                    )
+                    Spacer(modifier = Modifier.width(8.dp)) // Add some spacing between the progress bar and the text if needed
+                    Text(
+                        text = "${(currentLessonProgress)}%",
+                        fontSize = 10.sp,
+                        fontFamily = AppFonts.quicksand,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }
