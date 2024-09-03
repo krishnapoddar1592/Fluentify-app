@@ -35,6 +35,8 @@ class CourseSelectionScreenViewModel @Inject constructor(
     private val _userId=MutableStateFlow("")
     val userId=_userId.asStateFlow()
 
+
+
     private val _enrollmentResult = MutableStateFlow<CourseEnrollmentResult?>(null)
     val enrollmentResult: StateFlow<CourseEnrollmentResult?> = _enrollmentResult
 

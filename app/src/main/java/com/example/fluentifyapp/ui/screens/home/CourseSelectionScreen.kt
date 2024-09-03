@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.fluentifyapp.languages.LanguageData
 import com.example.fluentifyapp.ui.screens.common.HeaderComponent
 import com.example.fluentifyapp.ui.screens.common.LanguageCard2
@@ -169,7 +170,7 @@ fun ActualCourseScreen(
 //                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            HeaderComponent(onBackPressed = onBackPressed, headerText = "Explore", canGoBack)
+            HeaderComponent(onBackPressed = onBackPressed, headerText = "Explore", canGoBack,26.sp)
             Spacer(modifier = Modifier.height(16.dp))
             Column(
                 modifier = Modifier

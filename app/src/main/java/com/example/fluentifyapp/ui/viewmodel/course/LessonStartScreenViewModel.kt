@@ -42,9 +42,12 @@ class LessonStartScreenViewModel @Inject constructor(
 
 
 
-    fun init(uid:String){
+    fun init(uid:String,cid:Int,lid:Int){
         _isLoading.value=true
         _userId.value=uid
+        _courseId.value=cid
+        _lessonId.value=lid
+
         viewModelScope.launch{
             try{
                 delay(3000)
