@@ -7,6 +7,8 @@ data class HomeInfo (
     val courseCompletionPercentage:Int,
     val currentLessonName:String,
     val lessonCompletionPercentage:Int,
+    val courseId:Int,
+    val lessonId:Int,
     val courseLanguage:String
 
 )
