@@ -7,7 +7,6 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -15,7 +14,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,15 +26,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -50,21 +45,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fluentifyapp.R
@@ -79,7 +68,6 @@ import com.example.fluentifyapp.ui.viewmodel.home.HomeScreenViewModel
 import eu.bambooapps.material3.pullrefresh.PullRefreshIndicator
 import eu.bambooapps.material3.pullrefresh.pullRefresh
 import eu.bambooapps.material3.pullrefresh.rememberPullRefreshState
-import kotlinx.coroutines.delay
 
 fun Modifier.shimmerLoadingAnimation(
     widthOfShadowBrush: Int = 500,
@@ -127,7 +115,7 @@ fun Modifier.shimmerLoadingAnimation(
 fun HomeScreen(
     viewModel: HomeScreenViewModel,
     onNavigateToCourseRegister: (Boolean, String) -> Unit,
-    onNavigateToLesson: () -> Unit
+    onNavigateToLesson: (Boolean,String,Int,Int) -> Unit
 ) {
     var isRefreshing by remember { mutableStateOf(false) }
 
@@ -241,7 +229,7 @@ fun ShimmerHomeScreen() {
 fun ActualHomeScreen(
     viewModel: HomeScreenViewModel,
     onNavigateToCourseRegister: (Boolean, String) -> Unit,
-    onNavigateToLesson: () -> Unit
+    onNavigateToLesson: (Boolean, String, Int, Int) -> Unit
 ) {
     val name by viewModel.name.collectAsState()
     val currentLesson by viewModel.currentLesson.collectAsState()
@@ -251,6 +239,9 @@ fun ActualHomeScreen(
     val language by viewModel.currentCourseLanguage.collectAsState()
     val courseDescription by viewModel.currentCourseDescription.collectAsState()
     val currentLanguage by viewModel.currentLanguage.collectAsState()
+    val courseId by viewModel.courseId.collectAsState()
+    val lessonId by viewModel.lessonId.collectAsState()
+    val userId by viewModel.userId.collectAsState()
 
     Log.d("HomeScreenViewModel","$currentCourse  ${currentCourse.isEmpty()}")
 
@@ -267,7 +258,7 @@ fun ActualHomeScreen(
     Spacer(modifier = Modifier.height(26.dp))
     Text("Continue Learning...", fontSize = 15.sp,fontFamily = AppFonts.quicksand, fontWeight = FontWeight.Bold)
     Spacer(modifier = Modifier.height(16.dp))
-    LessonProgressBox(currentCourse, currentLesson, currentLessonProgress,onNavigateToLesson)
+    LessonProgressBox(currentCourse, currentLesson, currentLessonProgress,onNavigateToLesson,userId,courseId,lessonId)
     Spacer(modifier = Modifier.height(26.dp))
     Text("Explore", fontSize = 26.sp, color = primaryColor, fontFamily = AppFonts.quicksand, fontWeight = FontWeight.Bold)
     Spacer(modifier = Modifier.height(16.dp))
@@ -360,7 +351,15 @@ fun CourseProgressBox(
 }
 
 @Composable
-fun LessonProgressBox(currentCourse: String, currentLesson: String, currentLessonProgress: Int, onNavigateToLesson: () -> Unit) {
+fun LessonProgressBox(
+    currentCourse: String,
+    currentLesson: String,
+    currentLessonProgress: Int,
+    onNavigateToLesson: (Boolean, String, Int, Int) -> Unit,
+    userId: String,
+    courseId: Int,
+    lessonId: Int
+) {
     var progress by remember { mutableStateOf(0f) }
 
     LaunchedEffect(key1 = currentLessonProgress) {
@@ -374,7 +373,9 @@ fun LessonProgressBox(currentCourse: String, currentLesson: String, currentLesso
     }
     Card(
         elevation = CardDefaults.cardElevation(4.dp), // Adjust the elevation value as needed
-        modifier = Modifier.fillMaxWidth().clickable { onNavigateToLesson() } ,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onNavigateToLesson(true,userId,courseId,lessonId) } ,
         shape = RectangleShape// Optional padding to prevent content clipping
     ) {
         Box(

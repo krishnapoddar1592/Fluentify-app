@@ -11,13 +11,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fluentifyapp.ui.theme.AppFonts
 import com.example.fluentifyapp.ui.theme.primaryColor
 
 @Composable
-fun HeaderComponent(onBackPressed: () -> Unit, headerText: String, canGoBack: Boolean){
+fun HeaderComponent(onBackPressed: () -> Unit, headerText: String, canGoBack: Boolean,fontSize: TextUnit){
     // Top bar with Back Button and Sign Up Title
     Row(
         modifier = Modifier
@@ -26,16 +27,16 @@ fun HeaderComponent(onBackPressed: () -> Unit, headerText: String, canGoBack: Bo
         verticalAlignment = Alignment.CenterVertically
     ) {
         BackButton(onBackPressed,canGoBack)
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.weight(0.5f))
         Text(
             text = headerText,
-            fontSize = 26.sp,
+            fontSize = fontSize,
             fontFamily = AppFonts.quicksand,
             fontWeight = FontWeight.Bold,
             color = primaryColor,
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(1f)
         )
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.weight(0.6f))
     }
 }

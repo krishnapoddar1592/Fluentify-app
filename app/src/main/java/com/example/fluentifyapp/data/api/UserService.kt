@@ -34,7 +34,7 @@ interface UserService {
     @GET("users/{id}/exploreCourses")
     suspend fun getNewCoursesForUser(@Path("id") userId: String):Response<List<CourseSummaryDTO>>
 
-    @GET("users/{id}/courses/{courseId}/lessonInfo{lessonId}")
+    @GET("users/{id}/courses/{courseId}/lessonInfo/{lessonId}")
     suspend fun getLessonStartPageData(@Path("id") userId: String, @Path("courseId") courseId: Int, @Path("lessonId") lessonId: Int):Response<LessonProgressDTO>
 
     @POST("users/{id}/courses/{courseId}")

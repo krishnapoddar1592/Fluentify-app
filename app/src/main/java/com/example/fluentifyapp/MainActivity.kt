@@ -23,6 +23,7 @@ import com.example.fluentifyapp.ui.screens.home.HomeScreen
 import com.example.fluentifyapp.ui.screens.login.LoginScreen
 import com.example.fluentifyapp.ui.screens.signup.SignUpScreen
 import com.example.fluentifyapp.ui.screens.signup.UserDetailsScreen
+import com.example.fluentifyapp.ui.viewmodel.course.LessonStartScreenViewModel
 import com.example.fluentifyapp.ui.viewmodel.home.CourseSelectionScreenViewModel
 import com.example.fluentifyapp.ui.viewmodel.home.HomeScreenViewModel
 import com.example.fluentifyapp.ui.viewmodel.login.LoginScreenViewModel
@@ -96,7 +97,9 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToCourseRegister = {canGoBack,userId->
                                     navController.navigate("selectCourse/$canGoBack/$userId")
                                 },
-                                onNavigateToLesson = {navController.navigate("lesson")}
+                                onNavigateToLesson = {canGoBack,userId,courseId,lessonId->
+                                    navController.navigate("lesson/$canGoBack/$userId/$courseId/$lessonId")
+                                }
                             )
                         }
                         composable(
@@ -145,8 +148,33 @@ class MainActivity : ComponentActivity() {
                                 userId=userId
                             )
                         }
-                        composable("lesson"){
-                            LessonStartScreen()
+                        composable("lesson/{canGoBack}/{userId}/{courseId}/{lessonId}",
+                            arguments = listOf(
+                                navArgument("canGoBack") { type = NavType.BoolType} ,
+                                navArgument("userId") { type = NavType.StringType },
+                                navArgument("courseId") { type = NavType.IntType},
+                                navArgument("lessonId") { type = NavType.IntType }
+                            ))
+                        {backStackEntry->
+                            val canGoBack=backStackEntry.arguments?.getBoolean("canGoBack")?:false
+                            val userId=backStackEntry.arguments?.getString("userId")?:""
+                            val courseId=backStackEntry.arguments?.getInt("courseId")?:-1
+                            val lessonId=backStackEntry.arguments?.getInt("lessonId")?:-1
+                            val viewModel:LessonStartScreenViewModel=hiltViewModel()
+                            LessonStartScreen(
+                                viewModel = viewModel,
+                                onBackPressed = {navController.navigate("welcome")},
+                                onNavigateToHomeScreen = {
+                                    navController.navigate("welcome") {
+                                        popUpTo(0) { inclusive = true }  // This clears the entire back stack.
+                                        launchSingleTop = true  // Ensures only a single instance of the destination.
+                                    }
+                                },
+                                canGoBack=canGoBack,
+                                userId=userId,
+                                courseId=courseId,
+                                lessonId=lessonId
+                            )
                         }
                     }
                 }

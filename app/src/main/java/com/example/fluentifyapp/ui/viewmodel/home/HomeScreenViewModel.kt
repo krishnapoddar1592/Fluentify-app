@@ -60,6 +60,12 @@ class HomeScreenViewModel @Inject constructor(
     private val _userId= MutableStateFlow("")
     val userId = _userId.asStateFlow()
 
+    private val _courseId =MutableStateFlow(-1)
+    val courseId=_courseId.asStateFlow()
+
+    private val _lessonId=MutableStateFlow(-1)
+    val lessonId=_lessonId.asStateFlow()
+
     fun init() {
         Log.d(TAG, "init: Starting initialization")
         _isLoading.value = true
@@ -93,7 +99,13 @@ class HomeScreenViewModel @Inject constructor(
                 _currentCourseDescription.value = homeInfo.currentCourseDescription ?: ""
                 Log.d(TAG, "init: Current course description updated: ${_currentCourseDescription.value}")
 
-                _currentLanguage.value = LanguageData.getLanguage(homeInfo.courseLanguage ?: "")
+                _courseId.value=homeInfo.courseId
+                Log.d(TAG, "init: Current course id updated: ${_courseId.value}")
+
+                _lessonId.value=homeInfo.lessonId
+                Log.d(TAG, "init: Current lesson id updated: ${_lessonId.value}")
+
+                _currentLanguage.value = LanguageData.getLanguage(homeInfo.courseLanguage)
                 Log.d(TAG, "init: Current language updated: ${_currentLanguage.value}")
 
 
