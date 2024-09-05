@@ -1,8 +1,6 @@
 package com.example.fluentifyapp.ui.screens.course
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -17,20 +15,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PaintingStyle
-import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fluentifyapp.R
@@ -152,8 +145,9 @@ fun ShimmerLessonStartScreen() {
                 modifier = Modifier
                     .size(180.dp)
                     .background(Color.LightGray, CircleShape)
-                    .shimmerLoadingAnimation()
                     .clip(CircleShape)
+                    .shimmerLoadingAnimation()
+
             )
 
             Spacer(modifier = Modifier.height(halfSpacing))
@@ -181,26 +175,36 @@ fun ShimmerLessonStartScreen() {
             Spacer(modifier = Modifier.height(quarterSpacing))
 
             // Lesson Info Row Placeholder
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = quarterSpacing),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(Color.LightGray, shape = CircleShape)
-                        .shimmerLoadingAnimation()
-                )
-                Box(
-                    modifier = Modifier
-                        .width(60.dp)
-                        .height(20.dp)
-                        .background(Color.LightGray)
-                        .shimmerLoadingAnimation()
-                )
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = quarterSpacing),
+                horizontalArrangement = Arrangement.SpaceEvenly){
+                repeat(2){
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(Color.LightGray, shape = CircleShape)
+                                .clip(CircleShape)
+                                .shimmerLoadingAnimation()
+                        )
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Box(
+                            modifier = Modifier
+                                .width(60.dp)
+                                .height(20.dp)
+                                .background(Color.LightGray)
+                                .shimmerLoadingAnimation()
+                        )
+                    }
+                }
+
+
             }
+
 
             Spacer(modifier = Modifier.weight(1f))
 
@@ -210,6 +214,7 @@ fun ShimmerLessonStartScreen() {
                     .fillMaxWidth()
                     .height(56.dp)
                     .background(Color.LightGray, RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(8.dp))
                     .shimmerLoadingAnimation()
             )
             Spacer(modifier = Modifier.weight(0.5f))
@@ -239,7 +244,13 @@ fun ActualLessonStartScreen(viewModel: LessonStartScreenViewModel, onBackPressed
                 .background(backgroundColor),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            HeaderComponent(onBackPressed = onBackPressed, headerText = lessonProgress.courseName , canGoBack = true,18.sp)
+            HeaderComponent(
+                onBackPressed = onBackPressed,
+                headerText = lessonProgress.courseName,
+                canGoBack = true,
+                18.sp,
+                false
+            )
 
             Spacer(modifier = Modifier.height(baseSpacing))
 
@@ -281,7 +292,7 @@ fun ActualLessonStartScreen(viewModel: LessonStartScreenViewModel, onBackPressed
             Spacer(modifier = Modifier.height(halfSpacing))
 
             Text(
-                text = "${lessonProgress.lessonDescription}",
+                text = lessonProgress.lessonDescription,
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
                 color = Color.Gray,

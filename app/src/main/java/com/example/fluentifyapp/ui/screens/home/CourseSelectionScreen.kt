@@ -170,7 +170,13 @@ fun ActualCourseScreen(
 //                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            HeaderComponent(onBackPressed = onBackPressed, headerText = "Explore", canGoBack,26.sp)
+            HeaderComponent(
+                onBackPressed = onBackPressed,
+                headerText = "Explore",
+                canGoBack,
+                26.sp,
+                false
+            )
             Spacer(modifier = Modifier.height(16.dp))
             Column(
                 modifier = Modifier
