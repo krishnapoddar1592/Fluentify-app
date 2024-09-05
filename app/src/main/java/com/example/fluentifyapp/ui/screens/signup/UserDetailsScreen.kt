@@ -113,7 +113,8 @@ fun UserDetailsScreen(
                 onBackPressed = onBackPressed,
                 headerText = "Sign Up",
                 canGoBack = true,
-                26.sp
+                26.sp,
+                false
             )
 
             // Profile completion title and description

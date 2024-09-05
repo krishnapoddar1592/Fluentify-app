@@ -11,9 +11,9 @@ import androidx.compose.ui.unit.dp
 import com.example.fluentifyapp.R
 
 @Composable
-fun BackButton(onBackPressed: (() -> Unit)?,canGoBack: Boolean) {
+fun BackButton(onBackPressed: (() -> Unit)?, canGoBack: Boolean, isColorWhite: Boolean) {
     Image(
-        painter = painterResource(id = R.drawable.backarrowgreen),
+        painter = painterResource(id = if(isColorWhite)R.drawable.back_arrow_white else R.drawable.backarrowgreen),
         contentDescription = "Back Button",
         modifier = Modifier
             .size(width = 24.dp, height = 23.dp)
