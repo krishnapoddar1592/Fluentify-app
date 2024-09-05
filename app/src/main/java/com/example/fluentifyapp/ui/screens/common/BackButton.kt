@@ -11,14 +11,14 @@ import androidx.compose.ui.unit.dp
 import com.example.fluentifyapp.R
 
 @Composable
-fun BackButton(onBackPressed: () -> Unit,canGoBack: Boolean) {
+fun BackButton(onBackPressed: (() -> Unit)?,canGoBack: Boolean) {
     Image(
         painter = painterResource(id = R.drawable.backarrowgreen),
         contentDescription = "Back Button",
         modifier = Modifier
             .size(width = 24.dp, height = 23.dp)
             .clickable(enabled = canGoBack) {
-                if (canGoBack) onBackPressed()
+                if (canGoBack && onBackPressed!=null) onBackPressed()
             }
             .alpha(if (canGoBack) 1f else 0.5f)
 

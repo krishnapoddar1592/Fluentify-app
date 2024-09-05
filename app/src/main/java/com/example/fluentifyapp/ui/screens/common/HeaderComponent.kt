@@ -18,7 +18,7 @@ import com.example.fluentifyapp.ui.theme.AppFonts
 import com.example.fluentifyapp.ui.theme.primaryColor
 
 @Composable
-fun HeaderComponent(onBackPressed: () -> Unit, headerText: String, canGoBack: Boolean,fontSize: TextUnit){
+fun HeaderComponent(onBackPressed: (() -> Unit)?, headerText: String, canGoBack: Boolean,fontSize: TextUnit){
     // Top bar with Back Button and Sign Up Title
     Row(
         modifier = Modifier
