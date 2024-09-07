@@ -2,33 +2,24 @@ package com.example.fluentifyapp.ui.screens.course
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,12 +31,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fluentifyapp.R
@@ -54,18 +43,16 @@ import com.example.fluentifyapp.ui.screens.common.HeaderComponent
 import com.example.fluentifyapp.ui.theme.AppFonts
 import com.example.fluentifyapp.ui.theme.backgroundColor
 import com.example.fluentifyapp.ui.theme.primaryColor
-import kotlinx.coroutines.launch
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Fill
-import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImagePainter.State.Empty.painter
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.text.style.TextOverflow
+import com.example.fluentifyapp.ui.theme.boxBackground
+import com.example.fluentifyapp.ui.theme.selectedBox
 import kotlinx.coroutines.delay
 import kotlin.math.floor
 
@@ -93,7 +80,6 @@ fun FillQuestionScreen() {
                 secondsRemaining-=0.1f
             } else {
                 isTimerRunning = false
-//                onTimerEnd()
             }
         }
     }
@@ -101,8 +87,6 @@ fun FillQuestionScreen() {
         modifier = Modifier
             .fillMaxSize()
             .background(color = backgroundColor),
-//            .verticalScroll(rememberScrollState()),
-//        verticalArrangement = Arrangement.SpaceEvenly,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
 
@@ -227,31 +211,11 @@ fun FillQuestionScreen() {
 
 
         }
+//        FillQuestionOptions()
+        MatchQuestionOptions()
 
-        // State to track the selected option by index (initially -1, meaning none is selected)
-        var selectedIndex by remember { mutableStateOf(-1) }
 
-        // List of option texts
-        val options = listOf("Bon appétit", "Buon giorno", "Merci beaucoup", "Adiós")
-        Column(
-            modifier = Modifier
-                .padding(top = 60.dp,bottom = 20.dp)
-                .fillMaxWidth()
-                .align(Alignment.CenterHorizontally),
-            verticalArrangement = Arrangement.SpaceEvenly,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            options.forEachIndexed { index, text ->
-                OptionBox(
-                    text = text,
-                    isSelected = selectedIndex == index, // Check if this option is selected
-                    onClick = {
-                        selectedIndex = index // Update selected index when clicked
-                    }
-                )
-                Spacer(modifier = Modifier.height(16.dp)) // Space between options
-            }
-        }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -264,6 +228,257 @@ fun FillQuestionScreen() {
 //        Spacer(modifier = Modifier.weight(0.5f))
     }
 }
+
+@Composable
+fun FillQuestionOptions(){
+    // State to track the selected option by index (initially -1, meaning none is selected)
+    var selectedIndex by remember { mutableIntStateOf(-1) }
+
+    // List of option texts
+    val options = listOf("Bon appétit", "Buon giorno", "Merci beaucoup", "Adiós")
+
+    Column(
+        modifier = Modifier
+            .padding(top = 60.dp, bottom = 20.dp)
+            .fillMaxWidth(),
+//            .align(Alignment.CenterHorizontally),
+        verticalArrangement = Arrangement.SpaceEvenly,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        options.forEachIndexed { index, text ->
+            OptionBox(
+                text = text,
+                isSelected = selectedIndex == index, // Check if this option is selected
+                onClick = {
+                    selectedIndex = index // Update selected index when clicked
+                }
+            )
+            Spacer(modifier = Modifier.height(16.dp)) // Space between options
+        }
+    }
+}
+
+@Composable
+fun MatchQuestionOptions() {
+    val translatedWords = listOf("Valigia", "Biglietto", "Carta di credito", "Passaporto")
+    val originalWords = listOf("Passport", "Hotel", "Suitcase", "Credit Card")
+
+    var currentFirstWord by remember { mutableStateOf("") }
+    var currentSecondWord by remember { mutableStateOf("") }
+    var isOriginalWordSelected by remember { mutableStateOf(false) }
+    var isTranslatedWordSelected by remember { mutableStateOf(false) }
+    var selectedPairsCount by remember { mutableStateOf(0) }
+
+    val wordMap = remember { mutableStateMapOf<String, String>() }
+    val numberMap = remember { mutableStateMapOf<String, Int>() }
+    val isLoading = remember { mutableStateOf(true) }
+
+    LaunchedEffect(key1 = Unit) {
+        isLoading.value = true
+        for (i in translatedWords.indices) {
+            wordMap[translatedWords[i]] = ""
+            wordMap[originalWords[i]] = ""
+        }
+        isLoading.value = false
+    }
+
+    if (isLoading.value) {
+        // Show loading indicator
+    } else {
+        Column(
+            modifier = Modifier
+                .padding(top = 60.dp, bottom = 20.dp)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            for (i in 0 until 4) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    MatchOptionBox(
+                        text = translatedWords[i],
+                        isSelected = wordMap[translatedWords[i]]!!.isNotEmpty() || currentFirstWord==translatedWords[i],
+                        number = numberMap[translatedWords[i]] ?: 0,
+                        isDimmed = currentFirstWord.isNotEmpty() && currentFirstWord != translatedWords[i] && isTranslatedWordSelected,
+                        onClick = {
+                            handleWordSelection(
+                                selectedWord = translatedWords[i],
+                                isTranslated = true,
+                                currentFirstWord = currentFirstWord,
+                                currentSecondWord = currentSecondWord,
+                                isOriginalWordSelected = isOriginalWordSelected,
+                                isTranslatedWordSelected = isTranslatedWordSelected,
+                                wordMap = wordMap,
+                                numberMap = numberMap,
+                                onUpdateCurrentWords = { first, second ->
+                                    currentFirstWord = first
+                                    currentSecondWord = second
+                                },
+                                onUpdateSelectionFlags = { original, translated ->
+                                    isOriginalWordSelected = original
+                                    isTranslatedWordSelected = translated
+                                },
+                                onUpdateSelectedPairsCount = { selectedPairsCount = it }
+                            )
+                        }
+                    )
+                    Spacer(modifier = Modifier.width(20.dp))
+                    MatchOptionBox(
+                        text = originalWords[i],
+                        isSelected = wordMap[originalWords[i]]!!.isNotEmpty() || currentFirstWord==originalWords[i],
+                        number = numberMap[originalWords[i]] ?: 0,
+                        isDimmed = currentFirstWord.isNotEmpty() && currentFirstWord != originalWords[i] && isOriginalWordSelected,
+                        onClick = {
+                            handleWordSelection(
+                                selectedWord = originalWords[i],
+                                isTranslated = false,
+                                currentFirstWord = currentFirstWord,
+                                currentSecondWord = currentSecondWord,
+                                isOriginalWordSelected = isOriginalWordSelected,
+                                isTranslatedWordSelected = isTranslatedWordSelected,
+                                wordMap = wordMap,
+                                numberMap = numberMap,
+                                onUpdateCurrentWords = { first, second ->
+                                    currentFirstWord = first
+                                    currentSecondWord = second
+                                },
+                                onUpdateSelectionFlags = { original, translated ->
+                                    isOriginalWordSelected = original
+                                    isTranslatedWordSelected = translated
+                                },
+                                onUpdateSelectedPairsCount = { selectedPairsCount = it }
+                            )
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MatchOptionBox(
+    text: String,
+    isSelected: Boolean,
+    number: Int,
+    isDimmed: Boolean,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(120.dp, 42.dp)
+            .shadow(4.dp, shape = RoundedCornerShape(9.dp), clip = false)
+            .background(
+                color = if (isSelected) selectedBox else boxBackground,
+                shape = RoundedCornerShape(9.dp)
+            )
+            .clickable(
+                onClick = onClick,
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            )
+            .padding(vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        // Box for the dimming effect
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(if (isDimmed) 0.5f else 1f)
+        ) {
+            // Text for the main content
+            Text(
+                text = text,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Normal,
+                color = Color.Black,
+                fontFamily = AppFonts.quicksand,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
+
+        // Separate Box for the number, always at full opacity
+        if (number > 0) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .offset(y = (-12).dp)
+            ) {
+                Text(
+                    text = number.toString(),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+// handleWordSelection function remains the same as in the previous response
+
+fun handleWordSelection(
+    selectedWord: String,
+    isTranslated: Boolean,
+    currentFirstWord: String,
+    currentSecondWord: String,
+    isOriginalWordSelected: Boolean,
+    isTranslatedWordSelected: Boolean,
+    wordMap: MutableMap<String, String>,
+    numberMap: MutableMap<String, Int>,
+    onUpdateCurrentWords: (String, String) -> Unit,
+    onUpdateSelectionFlags: (Boolean, Boolean) -> Unit,
+    onUpdateSelectedPairsCount: (Int) -> Unit
+) {
+    when {
+        // Case 1: Selecting the first word of a pair
+        currentFirstWord.isEmpty() && (wordMap[selectedWord]?.isEmpty() == true) -> {
+            onUpdateCurrentWords(selectedWord, "")
+            onUpdateSelectionFlags(!isTranslated, isTranslated)
+            // Don't assign a number yet
+        }
+        // Case 2: Selecting the second word of a pair
+        currentSecondWord.isEmpty() && ((isTranslated && isOriginalWordSelected) || (!isTranslated && isTranslatedWordSelected)) -> {
+            val newPairNumber = numberMap.values.maxOrNull()?.plus(1) ?: 1
+            wordMap[currentFirstWord] = selectedWord
+            wordMap[selectedWord] = currentFirstWord
+            numberMap[currentFirstWord] = newPairNumber
+            numberMap[selectedWord] = newPairNumber
+            onUpdateCurrentWords("", "")
+            onUpdateSelectionFlags(false, false)
+            onUpdateSelectedPairsCount(numberMap.size / 2)
+        }
+        // Case 3: Deselecting a word (breaking a pair)
+        selectedWord == currentFirstWord || (wordMap[selectedWord]?.isNotEmpty() == true && currentFirstWord.isEmpty()) -> {
+            val pairedWord = wordMap[selectedWord] ?: ""
+            wordMap[selectedWord] = ""
+            wordMap[pairedWord] = ""
+            val removedNumber = numberMap[selectedWord]
+            numberMap.remove(selectedWord)
+            numberMap.remove(pairedWord)
+            onUpdateCurrentWords("", "")
+            onUpdateSelectionFlags(false, false)
+            onUpdateSelectedPairsCount(numberMap.size / 2)
+
+            // Adjust numbers of pairs formed after the removed pair
+            if (removedNumber != null) {
+                numberMap.forEach { (word, number) ->
+                    if (number > removedNumber) {
+                        numberMap[word] = number - 1
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
+
 
 @Composable
 fun OptionBox(text: String, isSelected: Boolean, onClick: () -> Unit) {
