@@ -11,12 +11,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.fluentifyapp.ui.screens.course.FillQuestionScreen
 import com.example.fluentifyapp.ui.screens.course.LessonStartScreen
 import com.example.fluentifyapp.ui.screens.home.CourseSelectionScreen
 import com.example.fluentifyapp.ui.screens.home.HomeScreen
@@ -47,7 +49,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val navController = rememberNavController()
-                    NavHost(navController = navController, startDestination = "splash") {
+                    NavHost(navController = navController, startDestination = "questionScreen") {
                         composable("splash") {
                             LaunchedEffect(Unit) {
                                 val currentUser = mAuth.currentUser
@@ -175,6 +177,9 @@ class MainActivity : ComponentActivity() {
                                 courseId=courseId,
                                 lessonId=lessonId
                             )
+                        }
+                        composable("questionScreen") {
+                            FillQuestionScreen()
                         }
                     }
                 }
