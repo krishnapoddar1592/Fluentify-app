@@ -1,5 +1,7 @@
 package com.example.fluentifyapp.ui.screens.course
 
+import android.graphics.BlurMaskFilter
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -44,16 +46,28 @@ import com.example.fluentifyapp.ui.theme.AppFonts
 import com.example.fluentifyapp.ui.theme.backgroundColor
 import com.example.fluentifyapp.ui.theme.primaryColor
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import com.example.fluentifyapp.ui.theme.boxBackground
 import com.example.fluentifyapp.ui.theme.selectedBox
 import kotlinx.coroutines.delay
+import java.util.LinkedList
+import java.util.Queue
 import kotlin.math.floor
 
 
@@ -106,7 +120,7 @@ fun FillQuestionScreen() {
             ){
                 HeaderComponent(
                     onBackPressed = null,
-                    headerText = "Essentials ${LanguageData.getLangEmoji("French")}",
+                    headerText = "Essentials ${LanguageData.getLangEmoji("Italian")}",
                     canGoBack = true,
                     fontSize = 20.sp,
                     isColorWhite=true
@@ -258,68 +272,6 @@ fun FillQuestionOptions(){
     }
 }
 
-// MatchOptionBox and handleWordSelection functions remain unchanged
-
-@Composable
-fun MatchOptionBox(
-    text: String,
-    isSelected: Boolean,
-    number: Int,
-    isDimmed: Boolean,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .size(120.dp, 42.dp)
-            .shadow(4.dp, shape = RoundedCornerShape(9.dp), clip = false)
-            .background(
-                color = if (isSelected) selectedBox else boxBackground,
-                shape = RoundedCornerShape(9.dp)
-            )
-            .clickable(
-                onClick = onClick,
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() }
-            )
-            .padding(vertical = 8.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        // Box for the dimming effect
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .alpha(if (isDimmed) 0.5f else 1f)
-        ) {
-            // Text for the main content
-            Text(
-                text = text,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Normal,
-                color = Color.Black,
-                fontFamily = AppFonts.quicksand,
-                modifier = Modifier.align(Alignment.Center)
-            )
-        }
-
-        // Separate Box for the number, always at full opacity
-        if (number > 0) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .offset(y = (-12).dp)
-            ) {
-                Text(
-                    text = number.toString(),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-    }
-}
-
 @Composable
 fun MatchQuestionOptions() {
     val translatedWords = listOf("Valigia", "Biglietto", "Carta di credito", "Passaporto")
@@ -332,11 +284,20 @@ fun MatchQuestionOptions() {
     var selectedPairsCount by remember { mutableStateOf(0) }
 
     val wordMap = remember { mutableStateMapOf<String, String>() }
-    val numberMap = remember { mutableStateMapOf<String, Int>() }
+    val colorMap = remember { mutableStateMapOf<String, Color>() }
     val isLoading = remember { mutableStateOf(true) }
-
-    // Use a MutableState for isOperationInProgress
     var isOperationInProgress by remember { mutableStateOf(false) }
+    var currentSelectedColor by remember { mutableStateOf<Color?>(null) }
+
+    // Create a Queue (LinkedList) of colors
+    val colorQueue = remember {
+        LinkedList(listOf(
+            Color(0xFFa5f3fc),
+            Color(0xFF99f6e4),
+            Color(0xFFfecdd3),
+            Color(0xFFc7d2fe)
+        ))
+    }
 
     LaunchedEffect(key1 = Unit) {
         isLoading.value = true
@@ -364,7 +325,7 @@ fun MatchQuestionOptions() {
                     MatchOptionBox(
                         text = translatedWords[i],
                         isSelected = wordMap[translatedWords[i]]!!.isNotEmpty() || currentFirstWord == translatedWords[i],
-                        number = numberMap[translatedWords[i]] ?: 0,
+                        color = colorMap[translatedWords[i]] ?: (if (currentFirstWord == translatedWords[i]) currentSelectedColor!! else Color.Transparent),
                         isDimmed = currentFirstWord.isNotEmpty() && currentFirstWord != translatedWords[i] && isTranslatedWordSelected,
                         onClick = {
                             if (!isOperationInProgress) {
@@ -377,7 +338,9 @@ fun MatchQuestionOptions() {
                                     isOriginalWordSelected = isOriginalWordSelected,
                                     isTranslatedWordSelected = isTranslatedWordSelected,
                                     wordMap = wordMap,
-                                    numberMap = numberMap,
+                                    colorMap = colorMap,
+                                    colorQueue = colorQueue,
+                                    currentSelectedColor = currentSelectedColor,
                                     onUpdateCurrentWords = { first, second ->
                                         currentFirstWord = first
                                         currentSecondWord = second
@@ -386,7 +349,8 @@ fun MatchQuestionOptions() {
                                         isOriginalWordSelected = original
                                         isTranslatedWordSelected = translated
                                     },
-                                    onUpdateSelectedPairsCount = { selectedPairsCount = it }
+                                    onUpdateSelectedPairsCount = { selectedPairsCount = it },
+                                    onUpdateCurrentSelectedColor = { currentSelectedColor = it }
                                 )
                                 isOperationInProgress = false
                             }
@@ -396,7 +360,7 @@ fun MatchQuestionOptions() {
                     MatchOptionBox(
                         text = originalWords[i],
                         isSelected = wordMap[originalWords[i]]!!.isNotEmpty() || currentFirstWord == originalWords[i],
-                        number = numberMap[originalWords[i]] ?: 0,
+                        color = colorMap[originalWords[i]] ?: (if (currentFirstWord == originalWords[i]) currentSelectedColor!! else Color.Transparent),
                         isDimmed = currentFirstWord.isNotEmpty() && currentFirstWord != originalWords[i] && isOriginalWordSelected,
                         onClick = {
                             if (!isOperationInProgress) {
@@ -409,7 +373,9 @@ fun MatchQuestionOptions() {
                                     isOriginalWordSelected = isOriginalWordSelected,
                                     isTranslatedWordSelected = isTranslatedWordSelected,
                                     wordMap = wordMap,
-                                    numberMap = numberMap,
+                                    colorMap = colorMap,
+                                    colorQueue = colorQueue,
+                                    currentSelectedColor = currentSelectedColor,
                                     onUpdateCurrentWords = { first, second ->
                                         currentFirstWord = first
                                         currentSecondWord = second
@@ -418,7 +384,8 @@ fun MatchQuestionOptions() {
                                         isOriginalWordSelected = original
                                         isTranslatedWordSelected = translated
                                     },
-                                    onUpdateSelectedPairsCount = { selectedPairsCount = it }
+                                    onUpdateSelectedPairsCount = { selectedPairsCount = it },
+                                    onUpdateCurrentSelectedColor = { currentSelectedColor = it }
                                 )
                                 isOperationInProgress = false
                             }
@@ -430,7 +397,48 @@ fun MatchQuestionOptions() {
     }
 }
 
-// The MatchOptionBox composable remains unchanged
+@Composable
+fun MatchOptionBox(
+    text: String,
+    isSelected: Boolean,
+    color: Color,
+    isDimmed: Boolean,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(120.dp, 42.dp)
+            .shadow(4.dp, shape = RoundedCornerShape(9.dp), clip = false)
+            .background(
+                color = if (isSelected) color else boxBackground,
+                shape = RoundedCornerShape(9.dp)
+            )
+            .clickable(
+                onClick = onClick,
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            )
+            .padding(vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        // Box for the dimming effect
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(if (isDimmed) 0.5f else 1f)
+        ) {
+            // Text for the main content
+            Text(
+                text = text,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Normal,
+                color = Color.Black,
+                fontFamily = AppFonts.quicksand,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
+    }
+}
 
 fun handleWordSelection(
     selectedWord: String,
@@ -440,66 +448,56 @@ fun handleWordSelection(
     isOriginalWordSelected: Boolean,
     isTranslatedWordSelected: Boolean,
     wordMap: MutableMap<String, String>,
-    numberMap: MutableMap<String, Int>,
+    colorMap: MutableMap<String, Color>,
+    colorQueue: Queue<Color>,
+    currentSelectedColor: Color?,
     onUpdateCurrentWords: (String, String) -> Unit,
     onUpdateSelectionFlags: (Boolean, Boolean) -> Unit,
-    onUpdateSelectedPairsCount: (Int) -> Unit
+    onUpdateSelectedPairsCount: (Int) -> Unit,
+    onUpdateCurrentSelectedColor: (Color?) -> Unit
 ) {
     when {
         // Case 1: Selecting the first word of a pair
         currentFirstWord.isEmpty() && (wordMap[selectedWord]?.isEmpty() == true) -> {
+            val newColor = colorQueue.poll() ?: Color.Gray
+            colorMap[selectedWord] = newColor
             onUpdateCurrentWords(selectedWord, "")
             onUpdateSelectionFlags(!isTranslated, isTranslated)
+            onUpdateCurrentSelectedColor(newColor)
         }
         // Case 2: Selecting the second word of a pair
         currentSecondWord.isEmpty() && ((isTranslated && isOriginalWordSelected) || (!isTranslated && isTranslatedWordSelected)) -> {
-
-
-            if(wordMap[selectedWord]!=""){
-                val currentPair=wordMap[selectedWord]
-                wordMap[currentPair!!]=""
-                val removedNumber = numberMap[selectedWord]
-                numberMap.remove(selectedWord)
-                numberMap.remove(currentPair)
-                // Adjust numbers of pairs formed after the removed pair
-                if (removedNumber != null) {
-                    numberMap.forEach { (word, number) ->
-                        if (number > removedNumber) {
-                            numberMap[word] = number - 1
-                        }
-                    }
-                }
-
+            if (wordMap[selectedWord] != "") {
+                val currentPair = wordMap[selectedWord]
+                wordMap[currentPair!!] = ""
+                colorMap[selectedWord]?.let { colorQueue.offer(it) }
+                colorMap.remove(selectedWord)
+                colorMap.remove(currentPair)
             }
-            val newPairNumber = numberMap.values.maxOrNull()?.plus(1) ?: 1
+
             wordMap[currentFirstWord] = selectedWord
             wordMap[selectedWord] = currentFirstWord
-            numberMap[currentFirstWord] = newPairNumber
-            numberMap[selectedWord] = newPairNumber
+            currentSelectedColor?.let {
+                colorMap[currentFirstWord] = it
+                colorMap[selectedWord] = it
+            }
             onUpdateCurrentWords("", "")
             onUpdateSelectionFlags(false, false)
-            onUpdateSelectedPairsCount(numberMap.size / 2)
+            onUpdateSelectedPairsCount(colorMap.size / 2)
+            onUpdateCurrentSelectedColor(null)
         }
         // Case 3: Deselecting a word (breaking a pair)
         selectedWord == currentFirstWord || (wordMap[selectedWord]?.isNotEmpty() == true && currentFirstWord.isEmpty()) -> {
             val pairedWord = wordMap[selectedWord] ?: ""
             wordMap[selectedWord] = ""
             wordMap[pairedWord] = ""
-            val removedNumber = numberMap[selectedWord]
-            numberMap.remove(selectedWord)
-            numberMap.remove(pairedWord)
+            colorMap[selectedWord]?.let { colorQueue.offer(it) }
+            colorMap.remove(selectedWord)
+            colorMap.remove(pairedWord)
             onUpdateCurrentWords("", "")
             onUpdateSelectionFlags(false, false)
-            onUpdateSelectedPairsCount(numberMap.size / 2)
-
-            // Adjust numbers of pairs formed after the removed pair
-            if (removedNumber != null) {
-                numberMap.forEach { (word, number) ->
-                    if (number > removedNumber) {
-                        numberMap[word] = number - 1
-                    }
-                }
-            }
+            onUpdateSelectedPairsCount(colorMap.size / 2)
+            onUpdateCurrentSelectedColor(null)
         }
     }
 }
@@ -550,6 +548,58 @@ fun OptionBox(text: String, isSelected: Boolean, onClick: () -> Unit) {
     }
 }
 
+/**
+ * Adds a drop shadow effect to the composable.
+ *
+ * This modifier allows you to draw a shadow behind the composable with various customization options.
+ *
+ * @param shape The shape of the shadow.
+ * @param color The color of the shadow.
+ * @param blur The blur radius of the shadow
+ * @param offsetY The shadow offset along the Y-axis.
+ * @param offsetX The shadow offset along the X-axis.
+ * @param spread The amount to increase the size of the shadow.
+ *
+ * @return A new `Modifier` with the drop shadow effect applied.
+ */
+fun Modifier.dropShadow(
+    shape: Shape,
+    color: Color = Color.Black.copy(0.25f),
+    blur: Dp = 4.dp,
+    offsetY: Dp = 4.dp,
+    offsetX: Dp = 0.dp,
+    spread: Dp = 0.dp
+) = this.drawBehind {
+
+    val shadowSize = Size(size.width + spread.toPx(), size.height + spread.toPx())
+    val shadowOutline = shape.createOutline(shadowSize, layoutDirection, this)
+
+    val paint = Paint()
+    paint.color = color
+
+    if (blur.toPx() > 0) {
+        paint.asFrameworkPaint().apply {
+            maskFilter = BlurMaskFilter(blur.toPx(), BlurMaskFilter.Blur.NORMAL)
+        }
+    }
+
+    drawIntoCanvas { canvas ->
+        canvas.save()
+        canvas.translate(offsetX.toPx(), offsetY.toPx())
+        canvas.drawOutline(shadowOutline, paint)
+        canvas.restore()
+    }
+}
+
+fun Modifier.doubleShadowDrop(
+    shape: Shape,
+    offset: Dp = 4.dp,
+    blur: Dp = 8.dp
+) = this
+    .dropShadow(shape, Color.Black.copy(0.25f), blur, offset, offset)
+    .dropShadow(shape, Color.White.copy(0.25f), blur, -offset, -offset)
+
+
 // ClickableCircle composable to display the circle
 @Composable
 fun ClickableCircle(isFilled: Boolean) {
@@ -569,22 +619,45 @@ fun ClickableCircle(isFilled: Boolean) {
 }
 @Preview
 @Composable
-fun NextButton(){
+fun NextButton() {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val buttonColor = Color(0xFF00CED1)
+    val shadowColor = Color(0xFF008B8B)  // Darker shade for shadow
+    val shape =RoundedCornerShape(10.dp)
+
+
+    // Animate shadow offset and blur radius
+    // To create a hide shadow animation on press
+    val shadowOffset by animateDpAsState(
+        targetValue = if (isPressed) 0.dp else 4.dp
+    )
+    val shadowBlur by animateDpAsState(
+        targetValue = if (isPressed) 0.dp else 8.dp
+    )
+
+
     Box(
         modifier = Modifier
             .size(50.dp)
+            .doubleShadowDrop(shape, shadowOffset, shadowBlur)
+//            .offset(y = if (isPressed) 2.dp else 0.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(Color(0xFF00CED1))
-            .clickable(onClick = {}),
+            .background(buttonColor, shape)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = LocalIndication.current,
+                onClick = {  }
+            ),
         contentAlignment = Alignment.Center
     ) {
         Image(
             painter = painterResource(id = R.drawable.next_arrow),
-            contentDescription = "Back Button",
-            Modifier.size(35.dp)
+            contentDescription = "Next Button",
+            modifier = Modifier.size(35.dp)
         )
     }
-
 }
 
 
