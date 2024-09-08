@@ -502,12 +502,6 @@ fun handleWordSelection(
     }
 }
 
-
-
-
-
-
-
 @Composable
 fun OptionBox(text: String, isSelected: Boolean, onClick: () -> Unit) {
     Box(
