@@ -169,7 +169,7 @@ fun FillQuestionScreen() {
 
                             Spacer(modifier = Modifier.height(20.dp))
                             Text(
-                                text = "Which of the following phrases is commonly used to greet someone in Italian?",
+                                text = "Match the following Italian travel essentials with their corresponding English translations:",
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Normal,
                                 textAlign = TextAlign.Center,
@@ -258,104 +258,7 @@ fun FillQuestionOptions(){
     }
 }
 
-@Composable
-fun MatchQuestionOptions() {
-    val translatedWords = listOf("Valigia", "Biglietto", "Carta di credito", "Passaporto")
-    val originalWords = listOf("Passport", "Hotel", "Suitcase", "Credit Card")
-
-    var currentFirstWord by remember { mutableStateOf("") }
-    var currentSecondWord by remember { mutableStateOf("") }
-    var isOriginalWordSelected by remember { mutableStateOf(false) }
-    var isTranslatedWordSelected by remember { mutableStateOf(false) }
-    var selectedPairsCount by remember { mutableStateOf(0) }
-
-    val wordMap = remember { mutableStateMapOf<String, String>() }
-    val numberMap = remember { mutableStateMapOf<String, Int>() }
-    val isLoading = remember { mutableStateOf(true) }
-
-    LaunchedEffect(key1 = Unit) {
-        isLoading.value = true
-        for (i in translatedWords.indices) {
-            wordMap[translatedWords[i]] = ""
-            wordMap[originalWords[i]] = ""
-        }
-        isLoading.value = false
-    }
-
-    if (isLoading.value) {
-        // Show loading indicator
-    } else {
-        Column(
-            modifier = Modifier
-                .padding(top = 60.dp, bottom = 20.dp)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            for (i in 0 until 4) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    MatchOptionBox(
-                        text = translatedWords[i],
-                        isSelected = wordMap[translatedWords[i]]!!.isNotEmpty() || currentFirstWord==translatedWords[i],
-                        number = numberMap[translatedWords[i]] ?: 0,
-                        isDimmed = currentFirstWord.isNotEmpty() && currentFirstWord != translatedWords[i] && isTranslatedWordSelected,
-                        onClick = {
-                            handleWordSelection(
-                                selectedWord = translatedWords[i],
-                                isTranslated = true,
-                                currentFirstWord = currentFirstWord,
-                                currentSecondWord = currentSecondWord,
-                                isOriginalWordSelected = isOriginalWordSelected,
-                                isTranslatedWordSelected = isTranslatedWordSelected,
-                                wordMap = wordMap,
-                                numberMap = numberMap,
-                                onUpdateCurrentWords = { first, second ->
-                                    currentFirstWord = first
-                                    currentSecondWord = second
-                                },
-                                onUpdateSelectionFlags = { original, translated ->
-                                    isOriginalWordSelected = original
-                                    isTranslatedWordSelected = translated
-                                },
-                                onUpdateSelectedPairsCount = { selectedPairsCount = it }
-                            )
-                        }
-                    )
-                    Spacer(modifier = Modifier.width(20.dp))
-                    MatchOptionBox(
-                        text = originalWords[i],
-                        isSelected = wordMap[originalWords[i]]!!.isNotEmpty() || currentFirstWord==originalWords[i],
-                        number = numberMap[originalWords[i]] ?: 0,
-                        isDimmed = currentFirstWord.isNotEmpty() && currentFirstWord != originalWords[i] && isOriginalWordSelected,
-                        onClick = {
-                            handleWordSelection(
-                                selectedWord = originalWords[i],
-                                isTranslated = false,
-                                currentFirstWord = currentFirstWord,
-                                currentSecondWord = currentSecondWord,
-                                isOriginalWordSelected = isOriginalWordSelected,
-                                isTranslatedWordSelected = isTranslatedWordSelected,
-                                wordMap = wordMap,
-                                numberMap = numberMap,
-                                onUpdateCurrentWords = { first, second ->
-                                    currentFirstWord = first
-                                    currentSecondWord = second
-                                },
-                                onUpdateSelectionFlags = { original, translated ->
-                                    isOriginalWordSelected = original
-                                    isTranslatedWordSelected = translated
-                                },
-                                onUpdateSelectedPairsCount = { selectedPairsCount = it }
-                            )
-                        }
-                    )
-                }
-            }
-        }
-    }
-}
+// MatchOptionBox and handleWordSelection functions remain unchanged
 
 @Composable
 fun MatchOptionBox(
@@ -417,7 +320,117 @@ fun MatchOptionBox(
     }
 }
 
-// handleWordSelection function remains the same as in the previous response
+@Composable
+fun MatchQuestionOptions() {
+    val translatedWords = listOf("Valigia", "Biglietto", "Carta di credito", "Passaporto")
+    val originalWords = listOf("Passport", "Hotel", "Suitcase", "Credit Card")
+
+    var currentFirstWord by remember { mutableStateOf("") }
+    var currentSecondWord by remember { mutableStateOf("") }
+    var isOriginalWordSelected by remember { mutableStateOf(false) }
+    var isTranslatedWordSelected by remember { mutableStateOf(false) }
+    var selectedPairsCount by remember { mutableStateOf(0) }
+
+    val wordMap = remember { mutableStateMapOf<String, String>() }
+    val numberMap = remember { mutableStateMapOf<String, Int>() }
+    val isLoading = remember { mutableStateOf(true) }
+
+    // Use a MutableState for isOperationInProgress
+    var isOperationInProgress by remember { mutableStateOf(false) }
+
+    LaunchedEffect(key1 = Unit) {
+        isLoading.value = true
+        for (i in translatedWords.indices) {
+            wordMap[translatedWords[i]] = ""
+            wordMap[originalWords[i]] = ""
+        }
+        isLoading.value = false
+    }
+
+    if (isLoading.value) {
+        // Show loading indicator
+    } else {
+        Column(
+            modifier = Modifier
+                .padding(top = 60.dp, bottom = 20.dp)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            for (i in 0 until 4) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    MatchOptionBox(
+                        text = translatedWords[i],
+                        isSelected = wordMap[translatedWords[i]]!!.isNotEmpty() || currentFirstWord == translatedWords[i],
+                        number = numberMap[translatedWords[i]] ?: 0,
+                        isDimmed = currentFirstWord.isNotEmpty() && currentFirstWord != translatedWords[i] && isTranslatedWordSelected,
+                        onClick = {
+                            if (!isOperationInProgress) {
+                                isOperationInProgress = true
+                                handleWordSelection(
+                                    selectedWord = translatedWords[i],
+                                    isTranslated = true,
+                                    currentFirstWord = currentFirstWord,
+                                    currentSecondWord = currentSecondWord,
+                                    isOriginalWordSelected = isOriginalWordSelected,
+                                    isTranslatedWordSelected = isTranslatedWordSelected,
+                                    wordMap = wordMap,
+                                    numberMap = numberMap,
+                                    onUpdateCurrentWords = { first, second ->
+                                        currentFirstWord = first
+                                        currentSecondWord = second
+                                    },
+                                    onUpdateSelectionFlags = { original, translated ->
+                                        isOriginalWordSelected = original
+                                        isTranslatedWordSelected = translated
+                                    },
+                                    onUpdateSelectedPairsCount = { selectedPairsCount = it }
+                                )
+                                isOperationInProgress = false
+                            }
+                        }
+                    )
+                    Spacer(modifier = Modifier.width(20.dp))
+                    MatchOptionBox(
+                        text = originalWords[i],
+                        isSelected = wordMap[originalWords[i]]!!.isNotEmpty() || currentFirstWord == originalWords[i],
+                        number = numberMap[originalWords[i]] ?: 0,
+                        isDimmed = currentFirstWord.isNotEmpty() && currentFirstWord != originalWords[i] && isOriginalWordSelected,
+                        onClick = {
+                            if (!isOperationInProgress) {
+                                isOperationInProgress = true
+                                handleWordSelection(
+                                    selectedWord = originalWords[i],
+                                    isTranslated = false,
+                                    currentFirstWord = currentFirstWord,
+                                    currentSecondWord = currentSecondWord,
+                                    isOriginalWordSelected = isOriginalWordSelected,
+                                    isTranslatedWordSelected = isTranslatedWordSelected,
+                                    wordMap = wordMap,
+                                    numberMap = numberMap,
+                                    onUpdateCurrentWords = { first, second ->
+                                        currentFirstWord = first
+                                        currentSecondWord = second
+                                    },
+                                    onUpdateSelectionFlags = { original, translated ->
+                                        isOriginalWordSelected = original
+                                        isTranslatedWordSelected = translated
+                                    },
+                                    onUpdateSelectedPairsCount = { selectedPairsCount = it }
+                                )
+                                isOperationInProgress = false
+                            }
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+// The MatchOptionBox composable remains unchanged
 
 fun handleWordSelection(
     selectedWord: String,
@@ -437,10 +450,27 @@ fun handleWordSelection(
         currentFirstWord.isEmpty() && (wordMap[selectedWord]?.isEmpty() == true) -> {
             onUpdateCurrentWords(selectedWord, "")
             onUpdateSelectionFlags(!isTranslated, isTranslated)
-            // Don't assign a number yet
         }
         // Case 2: Selecting the second word of a pair
         currentSecondWord.isEmpty() && ((isTranslated && isOriginalWordSelected) || (!isTranslated && isTranslatedWordSelected)) -> {
+
+
+            if(wordMap[selectedWord]!=""){
+                val currentPair=wordMap[selectedWord]
+                wordMap[currentPair!!]=""
+                val removedNumber = numberMap[selectedWord]
+                numberMap.remove(selectedWord)
+                numberMap.remove(currentPair)
+                // Adjust numbers of pairs formed after the removed pair
+                if (removedNumber != null) {
+                    numberMap.forEach { (word, number) ->
+                        if (number > removedNumber) {
+                            numberMap[word] = number - 1
+                        }
+                    }
+                }
+
+            }
             val newPairNumber = numberMap.values.maxOrNull()?.plus(1) ?: 1
             wordMap[currentFirstWord] = selectedWord
             wordMap[selectedWord] = currentFirstWord
