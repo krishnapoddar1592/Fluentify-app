@@ -2,6 +2,10 @@ package com.example.fluentifyapp.di
 
 import com.example.fluentifyapp.data.api.CourseService
 import com.example.fluentifyapp.data.api.UserService
+import com.example.fluentifyapp.data.model.Question
+import com.example.fluentifyapp.data.model.QuestionTypeAdapter
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,14 +21,22 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
+    @Provides
+    @Singleton
+    fun provideGson(): Gson {
+        return GsonBuilder()
+            .registerTypeAdapter(Question::class.java, QuestionTypeAdapter())
+            .create()
+    }
 
     @Provides
     @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
+    fun provideRetrofit(okHttpClient: OkHttpClient,gson:Gson): Retrofit {
+
         return Retrofit.Builder()
             .baseUrl(com.example.fluentifyapp.di.Credentials.API_BASE_URL)
             .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
 
