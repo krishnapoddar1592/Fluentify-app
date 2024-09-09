@@ -18,14 +18,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.fluentifyapp.ui.screens.course.FillQuestionScreen
 import com.example.fluentifyapp.ui.screens.course.LessonStartScreen
+import com.example.fluentifyapp.ui.screens.course.QuestionScreen
 import com.example.fluentifyapp.ui.screens.home.CourseSelectionScreen
 import com.example.fluentifyapp.ui.screens.home.HomeScreen
 import com.example.fluentifyapp.ui.screens.login.LoginScreen
 import com.example.fluentifyapp.ui.screens.signup.SignUpScreen
 import com.example.fluentifyapp.ui.screens.signup.UserDetailsScreen
 import com.example.fluentifyapp.ui.viewmodel.course.LessonStartScreenViewModel
+import com.example.fluentifyapp.ui.viewmodel.course.QuestionScreenViewModel
 import com.example.fluentifyapp.ui.viewmodel.home.CourseSelectionScreenViewModel
 import com.example.fluentifyapp.ui.viewmodel.home.HomeScreenViewModel
 import com.example.fluentifyapp.ui.viewmodel.login.LoginScreenViewModel
@@ -179,7 +180,9 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("questionScreen") {
-                            FillQuestionScreen()
+                            val viewmodel:QuestionScreenViewModel= hiltViewModel()
+                            //Test
+                            QuestionScreen(viewmodel,{navController.navigate("welcome")},{navController.navigate("welcome")},false,"AVl99WA7fdame7Pi6Odr0sEwVRz1",1,1,0,"Basic Spanish","Spanish",2)
                         }
                     }
                 }

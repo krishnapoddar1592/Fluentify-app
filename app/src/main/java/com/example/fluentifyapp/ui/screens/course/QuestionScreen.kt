@@ -48,9 +48,10 @@ import com.example.fluentifyapp.ui.theme.primaryColor
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -60,11 +61,14 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import com.example.fluentifyapp.data.model.FillQuestion
+import com.example.fluentifyapp.data.model.MatchQuestion
+import com.example.fluentifyapp.ui.screens.home.shimmerLoadingAnimation
 import com.example.fluentifyapp.ui.theme.boxBackground
-import com.example.fluentifyapp.ui.theme.selectedBox
+import com.example.fluentifyapp.ui.viewmodel.course.QuestionScreenViewModel
 import kotlinx.coroutines.delay
 import java.util.LinkedList
 import java.util.Queue
@@ -72,15 +76,73 @@ import kotlin.math.floor
 
 
 @Composable
-fun QuestionScreen() {
+fun QuestionScreen(
+    viewModel: QuestionScreenViewModel,
+    onBackPressed: () -> Unit,
+    onNavigateToHomeScreen: ()->Unit,
+    canGoBack: Boolean = false,
+    userId:String="",
+    courseId:Int=-1,
+    lessonId:Int=-1,
+    questionOffset:Int=0,
+    lessonName:String="",
+    lessonLang:String="",
+    totalQuestions:Int=0
+
+) {
+
+    val isLoading by viewModel.isLoading.collectAsState()
+    LaunchedEffect(key1 = Unit) {
+        viewModel.init(courseId,lessonId,userId,questionOffset)
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundColor)
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+//                .padding(16.dp)
+        ) {
+            item{
+                if (isLoading) {
+                    ShimmerQuestionScreen()
+                } else {
+                    ActualQuestionScreen(viewModel,onBackPressed,canGoBack,onNavigateToHomeScreen,lessonName,lessonLang,totalQuestions,questionOffset)
+                }
+            }
+        }
+    }
 
 }
+
+@Composable
+fun ShimmerQuestionScreen() {
+    Box(modifier = Modifier.fillMaxSize().shimmerLoadingAnimation())
+
+}
+
 //@Preview
 @Composable
-fun FillQuestionScreen() {
+fun ActualQuestionScreen(
+    viewModel: QuestionScreenViewModel,
+    onBackPressed: () -> Unit,
+    canGoBack: Boolean,
+    onNavigateToHomeScreen: () -> Unit,
+    lessonName: String,
+    lessonLang: String,
+    totalQuestions: Any,
+    questionOffset: Int
+) {
 
     var secondsRemaining by remember { mutableFloatStateOf(15f) }
     var isTimerRunning by remember { mutableStateOf(true) }
+
+    var questionBatch=viewModel.questionBatch.collectAsState()
+    var currentQuestionIndex=viewModel.currentQuestionIndex.collectAsState()
+
+    var question=questionBatch.value[currentQuestionIndex.value]
 
     val progress by animateFloatAsState(
         targetValue = secondsRemaining/ 15,
@@ -119,8 +181,8 @@ fun FillQuestionScreen() {
                 contentAlignment = Alignment.TopCenter
             ){
                 HeaderComponent(
-                    onBackPressed = null,
-                    headerText = "Essentials ${LanguageData.getLangEmoji("Italian")}",
+                    onBackPressed = onBackPressed,
+                    headerText = "$lessonName ${LanguageData.getLangEmoji(lessonLang)}",
                     canGoBack = true,
                     fontSize = 20.sp,
                     isColorWhite=true
@@ -171,7 +233,14 @@ fun FillQuestionScreen() {
                                     color = primaryColor
                                 )
                                 Text(
-                                    text = "7/12",
+                                    text = "$questionOffset",
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = AppFonts.quicksand,
+                                    color = primaryColor
+                                )
+                                Text(
+                                    text = "/$totalQuestions",
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = AppFonts.quicksand,
@@ -183,7 +252,7 @@ fun FillQuestionScreen() {
 
                             Spacer(modifier = Modifier.height(20.dp))
                             Text(
-                                text = "Match the following Italian travel essentials with their corresponding English translations:",
+                                text = question.questionText,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Normal,
                                 textAlign = TextAlign.Center,
@@ -226,10 +295,12 @@ fun FillQuestionScreen() {
 
         }
 //        FillQuestionOptions()
-        MatchQuestionOptions()
-
-
-
+        if(question.questionType=="Fill"){
+            FillQuestionOptions(viewModel)
+        }
+        else{
+            MatchQuestionOptions(viewModel)
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -244,12 +315,16 @@ fun FillQuestionScreen() {
 }
 
 @Composable
-fun FillQuestionOptions(){
+fun FillQuestionOptions(viewModel: QuestionScreenViewModel) {
     // State to track the selected option by index (initially -1, meaning none is selected)
     var selectedIndex by remember { mutableIntStateOf(-1) }
 
     // List of option texts
-    val options = listOf("Bon appétit", "Buon giorno", "Merci beaucoup", "Adiós")
+    var questionBatch=viewModel.questionBatch.collectAsState()
+    var currentQuestionIndex=viewModel.currentQuestionIndex.collectAsState()
+
+    var question=questionBatch.value[currentQuestionIndex.value] as FillQuestion
+    val options = question.options
 
     Column(
         modifier = Modifier
@@ -273,7 +348,7 @@ fun FillQuestionOptions(){
 }
 
 @Composable
-fun MatchQuestionOptions() {
+fun MatchQuestionOptions(viewModel: QuestionScreenViewModel) {
     val translatedWords = listOf("Valigia", "Biglietto", "Carta di credito", "Passaporto")
     val originalWords = listOf("Passport", "Hotel", "Suitcase", "Credit Card")
 
@@ -593,7 +668,6 @@ fun Modifier.doubleShadowDrop(
     .dropShadow(shape, Color.Black.copy(0.25f), blur, offset, offset)
     .dropShadow(shape, Color.White.copy(0.25f), blur, -offset, -offset)
 
-
 // ClickableCircle composable to display the circle
 @Composable
 fun ClickableCircle(isFilled: Boolean) {
@@ -642,7 +716,7 @@ fun NextButton() {
             .clickable(
                 interactionSource = interactionSource,
                 indication = LocalIndication.current,
-                onClick = {  }
+                onClick = { }
             ),
         contentAlignment = Alignment.Center
     ) {
