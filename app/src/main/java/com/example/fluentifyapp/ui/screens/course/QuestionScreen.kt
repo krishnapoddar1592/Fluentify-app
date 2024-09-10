@@ -36,7 +36,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fluentifyapp.R
@@ -61,7 +60,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
-import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.unit.Dp
 import com.example.fluentifyapp.data.model.FillQuestion
@@ -119,7 +117,9 @@ fun QuestionScreen(
 
 @Composable
 fun ShimmerQuestionScreen() {
-    Box(modifier = Modifier.fillMaxSize().shimmerLoadingAnimation())
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .shimmerLoadingAnimation())
 
 }
 
@@ -143,6 +143,8 @@ fun ActualQuestionScreen(
     var currentQuestionIndex=viewModel.currentQuestionIndex.collectAsState()
 
     var question=questionBatch.value[currentQuestionIndex.value]
+
+    val currentQuesNo=viewModel.currentQuestionNo.collectAsState()
 
     val progress by animateFloatAsState(
         targetValue = secondsRemaining/ 15,
@@ -233,7 +235,7 @@ fun ActualQuestionScreen(
                                     color = primaryColor
                                 )
                                 Text(
-                                    text = "$questionOffset",
+                                    text = "${currentQuesNo.value}",
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = AppFonts.quicksand,
@@ -307,7 +309,7 @@ fun ActualQuestionScreen(
                 .padding(20.dp),
             horizontalArrangement = Arrangement.End
         ) {
-           NextButton()
+           NextButton(viewModel)
         }
 
 //        Spacer(modifier = Modifier.weight(0.5f))
@@ -326,6 +328,8 @@ fun FillQuestionOptions(viewModel: QuestionScreenViewModel) {
     var question=questionBatch.value[currentQuestionIndex.value] as FillQuestion
     val options = question.options
 
+
+
     Column(
         modifier = Modifier
             .padding(top = 60.dp, bottom = 20.dp)
@@ -340,7 +344,8 @@ fun FillQuestionOptions(viewModel: QuestionScreenViewModel) {
                 isSelected = selectedIndex == index, // Check if this option is selected
                 onClick = {
                     selectedIndex = index // Update selected index when clicked
-                }
+                    viewModel.setSelectedWord(options[selectedIndex])
+                },
             )
             Spacer(modifier = Modifier.height(16.dp)) // Space between options
         }
@@ -349,8 +354,14 @@ fun FillQuestionOptions(viewModel: QuestionScreenViewModel) {
 
 @Composable
 fun MatchQuestionOptions(viewModel: QuestionScreenViewModel) {
-    val translatedWords = listOf("Valigia", "Biglietto", "Carta di credito", "Passaporto")
-    val originalWords = listOf("Passport", "Hotel", "Suitcase", "Credit Card")
+
+    var questionBatch=viewModel.questionBatch.collectAsState()
+    var currentQuestionIndex=viewModel.currentQuestionIndex.collectAsState()
+
+    var question=questionBatch.value[currentQuestionIndex.value] as MatchQuestion
+
+    val translatedWords:List<String> = question.wordPairs.keys.toList()
+    val originalWords:List<String> = question.wordPairs.values.toList()
 
     var currentFirstWord by remember { mutableStateOf("") }
     var currentSecondWord by remember { mutableStateOf("") }
@@ -425,7 +436,9 @@ fun MatchQuestionOptions(viewModel: QuestionScreenViewModel) {
                                         isTranslatedWordSelected = translated
                                     },
                                     onUpdateSelectedPairsCount = { selectedPairsCount = it },
-                                    onUpdateCurrentSelectedColor = { currentSelectedColor = it }
+                                    onUpdateCurrentSelectedColor = { currentSelectedColor = it },
+                                    viewModel,
+                                    translatedWords
                                 )
                                 isOperationInProgress = false
                             }
@@ -460,7 +473,9 @@ fun MatchQuestionOptions(viewModel: QuestionScreenViewModel) {
                                         isTranslatedWordSelected = translated
                                     },
                                     onUpdateSelectedPairsCount = { selectedPairsCount = it },
-                                    onUpdateCurrentSelectedColor = { currentSelectedColor = it }
+                                    onUpdateCurrentSelectedColor = { currentSelectedColor = it },
+                                    viewModel = viewModel,
+                                    translatedWords = translatedWords
                                 )
                                 isOperationInProgress = false
                             }
@@ -529,7 +544,9 @@ fun handleWordSelection(
     onUpdateCurrentWords: (String, String) -> Unit,
     onUpdateSelectionFlags: (Boolean, Boolean) -> Unit,
     onUpdateSelectedPairsCount: (Int) -> Unit,
-    onUpdateCurrentSelectedColor: (Color?) -> Unit
+    onUpdateCurrentSelectedColor: (Color?) -> Unit,
+    viewModel: QuestionScreenViewModel,
+    translatedWords: List<String>
 ) {
     when {
         // Case 1: Selecting the first word of a pair
@@ -543,6 +560,7 @@ fun handleWordSelection(
         // Case 2: Selecting the second word of a pair
         currentSecondWord.isEmpty() && ((isTranslated && isOriginalWordSelected) || (!isTranslated && isTranslatedWordSelected)) -> {
             if (wordMap[selectedWord] != "") {
+                viewModel.removeWordPairs()
                 val currentPair = wordMap[selectedWord]
                 wordMap[currentPair!!] = ""
                 colorMap[selectedWord]?.let { colorQueue.offer(it) }
@@ -555,6 +573,13 @@ fun handleWordSelection(
             currentSelectedColor?.let {
                 colorMap[currentFirstWord] = it
                 colorMap[selectedWord] = it
+            }
+            if(colorQueue.isEmpty()){
+                val finalWordMap: MutableMap<String, String> = emptyMap<String,String>().toMutableMap()
+                for(word in translatedWords){
+                    finalWordMap[word]= wordMap[word]!!
+                }
+                viewModel.setWordPairs(finalWordMap)
             }
             onUpdateCurrentWords("", "")
             onUpdateSelectionFlags(false, false)
@@ -578,7 +603,11 @@ fun handleWordSelection(
 }
 
 @Composable
-fun OptionBox(text: String, isSelected: Boolean, onClick: () -> Unit) {
+fun OptionBox(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
     Box(
         modifier = Modifier
             .size(273.dp, 42.dp)
@@ -685,9 +714,10 @@ fun ClickableCircle(isFilled: Boolean) {
             )
     )
 }
-@Preview
+
 @Composable
-fun NextButton() {
+fun NextButton(viewModel: QuestionScreenViewModel) {
+    val isSolved=viewModel.isSolved.collectAsState()
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
@@ -716,9 +746,13 @@ fun NextButton() {
             .clickable(
                 interactionSource = interactionSource,
                 indication = LocalIndication.current,
-                onClick = { }
+                onClick = {
+                    viewModel.onQuestionAnswered()
+                },
+                enabled = isSolved.value
             ),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
+
     ) {
         Image(
             painter = painterResource(id = R.drawable.next_arrow),

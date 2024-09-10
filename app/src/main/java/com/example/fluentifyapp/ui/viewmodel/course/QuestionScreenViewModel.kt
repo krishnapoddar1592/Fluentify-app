@@ -27,8 +27,23 @@ class QuestionScreenViewModel @Inject constructor(
     private val _questionBatch = MutableStateFlow<List<Question>>(emptyList())
     val questionBatch = _questionBatch.asStateFlow()
 
+    private val _currentQuestionNo=MutableStateFlow<Int>(0)
+    val currentQuestionNo=_currentQuestionNo.asStateFlow()
+
     private val _currentQuestionIndex = MutableStateFlow(0)
     val currentQuestionIndex = _currentQuestionIndex.asStateFlow()
+
+    private val _isSolved=MutableStateFlow(false)
+    val isSolved=_isSolved.asStateFlow()
+
+    private val _questionType=MutableStateFlow("")
+    val questionType=_questionType.asStateFlow()
+
+    private val _selectedWord=MutableStateFlow("")
+    val selectedWord=_selectedWord.asStateFlow()
+
+    private val _wordPairs=MutableStateFlow<Map<String,String>>(emptyMap())
+    val wordPairs=_wordPairs.asStateFlow()
 
     private var currentBatchIndex = 0
     private var batchSize = 10
@@ -37,11 +52,27 @@ class QuestionScreenViewModel @Inject constructor(
     private var offSet=0
     private var userId=""
 
+    fun setSelectedWord(word:String){
+        _isSolved.value=true
+        _selectedWord.value=word
+    }
+
+    fun setWordPairs(pairs:Map<String,String>){
+        _isSolved.value=true
+        _wordPairs.value=pairs
+    }
+
+    fun removeWordPairs(){
+        _isSolved.value=false
+        _wordPairs.value= emptyMap()
+    }
+
     fun init(courseId: Int, lessonId: Int, userId: String,offset:Int) {
         this.courseId = courseId
         this.lessonId = lessonId
         this.offSet=offset
         this.userId=userId
+        _currentQuestionNo.value=offset+1
         loadInitialQuestions()
     }
 
@@ -67,6 +98,7 @@ class QuestionScreenViewModel @Inject constructor(
 
     fun onQuestionAnswered() {
         _currentQuestionIndex.value += 1
+        _currentQuestionNo.value+=1
 
         // Check if we are at the halfway point
         if (_currentQuestionIndex.value == _questionBatch.value.size / 2) {
