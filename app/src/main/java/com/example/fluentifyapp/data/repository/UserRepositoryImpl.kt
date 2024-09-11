@@ -2,8 +2,10 @@ package com.example.fluentifyapp.data.repository
 
 import com.example.fluentifyapp.data.api.UserService
 import com.example.fluentifyapp.data.model.CourseSummaryDTO
+import com.example.fluentifyapp.data.model.FillQuestionResponse
 import com.example.fluentifyapp.data.model.HomeInfo
 import com.example.fluentifyapp.data.model.LessonProgressDTO
+import com.example.fluentifyapp.data.model.MatchQuestionResponse
 import com.example.fluentifyapp.data.model.User
 import com.example.fluentifyapp.data.model.UserRequest
 import com.google.firebase.auth.FirebaseAuth
@@ -81,6 +83,45 @@ class UserRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Result.failure(e)
 
+        }
+    }
+
+    override suspend fun answerMatchQuestion(
+        userId: String,
+        courseId: Int,
+        lessonId: Int,
+        questionId: Int,
+        answer: MatchQuestionResponse
+    ): Result<Unit> {
+        return try {
+            val response=userService.answerMatchQuestion(userId,courseId,lessonId,questionId,answer)
+            if(response.isSuccessful){
+                Result.success(Unit)
+            }else{
+                Result.failure(HttpException(response))
+            }
+        }catch (e:Exception){
+            Result.failure(e)
+        }
+
+    }
+
+    override suspend fun answerFillQuestion(
+        userId: String,
+        courseId: Int,
+        lessonId: Int,
+        questionId: Int,
+        answer: FillQuestionResponse
+    ): Result<Unit> {
+        return try {
+            val response=userService.answerFillQuestion(userId,courseId,lessonId,questionId,answer)
+            if(response.isSuccessful){
+                Result.success(Unit)
+            }else{
+                Result.failure(HttpException(response))
+            }
+        }catch (e:Exception){
+            Result.failure(e)
         }
     }
 

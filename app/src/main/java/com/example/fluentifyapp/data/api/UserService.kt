@@ -3,8 +3,10 @@ package com.example.fluentifyapp.data.api
 
 
 import com.example.fluentifyapp.data.model.CourseSummaryDTO
+import com.example.fluentifyapp.data.model.FillQuestionResponse
 import com.example.fluentifyapp.data.model.HomeInfo
 import com.example.fluentifyapp.data.model.LessonProgressDTO
+import com.example.fluentifyapp.data.model.MatchQuestionResponse
 import com.example.fluentifyapp.data.model.User
 import com.example.fluentifyapp.data.model.UserRequest
 import com.example.fluentifyapp.data.model.UserResponse
@@ -39,6 +41,13 @@ interface UserService {
 
     @POST("users/{id}/courses/{courseId}")
     suspend fun enrollUserToCourse(@Path("id") userId: String, @Path("courseId") courseId: Int):retrofit2.Response<Unit>
+
+    @POST("users/{id}/courses/{courseId}/lessons/{lessonId}/questions/{questionId}")
+    suspend fun answerMatchQuestion(@Path("id") userId: String, @Path("courseId") courseId: Int, @Path("lessonId") lessonId: Int, @Path("questionId") questionId: Int, @Body answer: MatchQuestionResponse): Response<Unit>
+
+    @POST("users/{id}/courses/{courseId}/lessons/{lessonId}/questions/{questionId}")
+    suspend fun answerFillQuestion(@Path("id") userId: String, @Path("courseId") courseId: Int, @Path("lessonId") lessonId: Int, @Path("questionId") questionId: Int, @Body answer: FillQuestionResponse): Response<Unit>
+
 }
 
 
