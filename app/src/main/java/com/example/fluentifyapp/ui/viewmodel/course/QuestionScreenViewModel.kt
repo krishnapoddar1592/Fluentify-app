@@ -1,12 +1,16 @@
 package com.example.fluentifyapp.ui.viewmodel.course
 
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fluentifyapp.data.model.FillQuestionResponse
+import com.example.fluentifyapp.data.model.MatchQuestionResponse
 import com.example.fluentifyapp.data.model.Question
 import com.example.fluentifyapp.data.repository.CourseRepository
 import com.example.fluentifyapp.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -97,8 +101,41 @@ class QuestionScreenViewModel @Inject constructor(
     }
 
     fun onQuestionAnswered() {
+        try{
+            viewModelScope.launch {
+                val response:Result<Unit>
+                if(selectedWord.value!=""){
+                     response=userRepository.answerFillQuestion(userId,courseId,lessonId,_questionBatch.value[_currentQuestionIndex.value].questionId,
+                        FillQuestionResponse("Fill", _selectedWord.value)
+                    )
+                }
+
+                else{
+                    response=userRepository.answerMatchQuestion(userId,courseId,lessonId,_questionBatch.value[_currentQuestionIndex.value].questionId,
+                    MatchQuestionResponse("Match", _wordPairs.value)
+                    )
+
+                }
+                if(response.isSuccess){
+                    Log.d(TAG,"Question answered successfully")
+                    _isSolved.value=false
+                    _selectedWord.value=""
+                    _wordPairs.value= emptyMap()
+                }
+                else{
+                    Log.e(TAG,response.toString())
+                }
+
+            }
+        }catch (e:Exception){
+            Log.e(TAG,e.message.toString())
+        }finally {
+
+        }
+
         _currentQuestionIndex.value += 1
         _currentQuestionNo.value+=1
+
 
         // Check if we are at the halfway point
         if (_currentQuestionIndex.value == _questionBatch.value.size / 2) {

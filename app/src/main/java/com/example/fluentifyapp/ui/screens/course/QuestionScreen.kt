@@ -751,6 +751,8 @@ fun NextButton(viewModel: QuestionScreenViewModel) {
                 },
                 enabled = isSolved.value
             ),
+
+//            .alpha(if (isSolved.value) 1f else 0.5f),
         contentAlignment = Alignment.Center,
 
     ) {
