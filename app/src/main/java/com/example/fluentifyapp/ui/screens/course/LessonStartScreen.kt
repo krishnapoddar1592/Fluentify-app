@@ -1,4 +1,6 @@
 package com.example.fluentifyapp.ui.screens.course
+import android.util.Log
+import androidx.compose.animation.shrinkOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -47,7 +49,8 @@ fun LessonStartScreen(
     canGoBack: Boolean = false,
     userId:String="",
     courseId:Int=-1,
-    lessonId:Int=-1
+    lessonId:Int=-1,
+    onNavigateToQuestionScreen: (Boolean,String,Int,Int,Int,String,String,Int)->Unit
 ) {
     var isRefreshing by remember { mutableStateOf(false) }
 
@@ -78,7 +81,7 @@ fun LessonStartScreen(
                 if (isLoading|| isRefreshing) {
                     ShimmerLessonStartScreen()
                 } else {
-                    ActualLessonStartScreen(viewModel,onBackPressed,canGoBack,onNavigateToHomeScreen)
+                    ActualLessonStartScreen(viewModel,onBackPressed,canGoBack,onNavigateToHomeScreen,onNavigateToQuestionScreen)
                 }
             }
         }
@@ -224,12 +227,22 @@ fun ShimmerLessonStartScreen() {
 
 
 @Composable
-fun ActualLessonStartScreen(viewModel: LessonStartScreenViewModel, onBackPressed: () -> Unit, canGoBack: Boolean, onNavigateToHomeScreen: () -> Unit) {
+fun ActualLessonStartScreen(
+    viewModel: LessonStartScreenViewModel,
+    onBackPressed: () -> Unit,
+    canGoBack: Boolean,
+    onNavigateToHomeScreen: () -> Unit,
+    onNavigateToQuestionScreen: (Boolean, String, Int, Int, Int, String, String, Int) -> Unit
+) {
     val baseSpacing = 100.dp
     val halfSpacing = baseSpacing / 2
     val quarterSpacing = baseSpacing / 4
 
     val lessonProgress by viewModel.lessonProgress.collectAsState()
+    val userId by viewModel.userId.collectAsState()
+    val courseId by viewModel.courseId.collectAsState()
+    val lessonId by viewModel.lessonId.collectAsState()
+    Log.e("tag", "$userId $courseId $lessonId")
 
 
     Box(
@@ -315,10 +328,20 @@ fun ActualLessonStartScreen(viewModel: LessonStartScreenViewModel, onBackPressed
             }
 
             Spacer(modifier = Modifier.weight(1f))
-
             Button(
-                onClick = { },
-                modifier = Modifier
+
+                onClick = { Log.d("LessonStartScreen", "Navigating to QuestionScreen: userId=$userId, courseId=$courseId, lessonId=$lessonId")
+                    onNavigateToQuestionScreen(
+                        true,
+                        userId,
+                        courseId,
+                        lessonId,
+                        lessonProgress.questionsAnswered,
+                        lessonProgress.lessonName,
+                        lessonProgress.language,
+                        lessonProgress.totalQuestions
+                    )},
+                     modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = primaryColor),

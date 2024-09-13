@@ -759,7 +759,7 @@ fun NextButton(viewModel: QuestionScreenViewModel) {
         Image(
             painter = painterResource(id = R.drawable.next_arrow),
             contentDescription = "Next Button",
-            modifier = Modifier.size(35.dp)
+            modifier = Modifier.size(35.dp).alpha(if (isSolved.value) 1f else 0.5f)
         )
     }
 }
