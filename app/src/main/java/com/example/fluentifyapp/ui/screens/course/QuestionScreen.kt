@@ -146,6 +146,12 @@ fun ActualQuestionScreen(
 
     val currentQuesNo=viewModel.currentQuestionNo.collectAsState()
 
+    val allQuestionsCompleted=viewModel.allQuestionsCompleted.collectAsState()
+
+    val questionsAnswered=viewModel.questionsAnsweredCount.collectAsState()
+
+    val correctAnswers=viewModel.correctAnswers.collectAsState()
+
     val progress by animateFloatAsState(
         targetValue = secondsRemaining/ 15,
         animationSpec = tween(durationMillis = 100)
@@ -155,11 +161,25 @@ fun ActualQuestionScreen(
         if (isTimerRunning) {
             if (secondsRemaining > 0) {
                 delay(100L)
-                secondsRemaining-=0.1f
+//                if(secondsRemaining-0.1f)
+                secondsRemaining=if(secondsRemaining>=0.1) secondsRemaining-0.1f else 0f
             } else {
+                viewModel.onQuestionAnswered()
+
                 isTimerRunning = false
             }
         }
+    }
+    LaunchedEffect(key1=allQuestionsCompleted.value) {
+        if(allQuestionsCompleted.value){
+//            onQuizCompleteScreen(
+//                questionsAnswered.value,
+//                questionBatch.value.size,
+//                correctAnswers.value
+//
+//            )
+        }
+
     }
     Column(
         modifier = Modifier
@@ -759,7 +779,9 @@ fun NextButton(viewModel: QuestionScreenViewModel) {
         Image(
             painter = painterResource(id = R.drawable.next_arrow),
             contentDescription = "Next Button",
-            modifier = Modifier.size(35.dp).alpha(if (isSolved.value) 1f else 0.5f)
+            modifier = Modifier
+                .size(35.dp)
+                .alpha(if (isSolved.value) 1f else 0.5f)
         )
     }
 }
