@@ -2,6 +2,7 @@ package com.example.fluentifyapp
 
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -50,7 +51,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val navController = rememberNavController()
-                    NavHost(navController = navController, startDestination = "questionScreen") {
+                    NavHost(navController = navController, startDestination = "splash") {
                         composable("splash") {
                             LaunchedEffect(Unit) {
                                 val currentUser = mAuth.currentUser
@@ -176,13 +177,52 @@ class MainActivity : ComponentActivity() {
                                 canGoBack=canGoBack,
                                 userId=userId,
                                 courseId=courseId,
-                                lessonId=lessonId
+                                lessonId=lessonId,
+                                onNavigateToQuestionScreen={canGoBack,userId,courseId,lessonId,questionOffset,lessonName,lessonLang,totalQuestions->
+                                    navController.navigate("questionScreen/$canGoBack/$userId/$courseId/$lessonId/$questionOffset/$lessonName/$lessonLang/$totalQuestions")
+
+                                }
                             )
                         }
-                        composable("questionScreen") {
-                            val viewmodel:QuestionScreenViewModel= hiltViewModel()
-                            //Test
-                            QuestionScreen(viewmodel,{navController.navigate("welcome")},{navController.navigate("welcome")},false,"AVl99WA7fdame7Pi6Odr0sEwVRz1",1,1,0,"Basic Spanish","Spanish",2)
+                        composable(
+                            route = "questionScreen/{canGoBack}/{userId}/{courseId}/{lessonId}/{questionOffset}/{lessonName}/{lessonLang}/{totalQuestions}",
+                            arguments = listOf(
+                                navArgument("canGoBack") { type = NavType.BoolType },
+                                navArgument("userId") { type = NavType.StringType },
+                                navArgument("courseId") { type = NavType.IntType },
+                                navArgument("lessonId") { type = NavType.IntType },
+                                navArgument("questionOffset") { type = NavType.IntType },
+                                navArgument("lessonName") { type = NavType.StringType },
+                                navArgument("lessonLang") { type = NavType.StringType },
+                                navArgument("totalQuestions") { type = NavType.IntType }
+                            )
+                        ) { backStackEntry ->
+                            val canGoBack = backStackEntry.arguments?.getBoolean("canGoBack") ?: false
+                            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+                            val courseId = backStackEntry.arguments?.getInt("courseId") ?: 0
+                            val lessonId = backStackEntry.arguments?.getInt("lessonId") ?: 0
+                            val questionOffset = backStackEntry.arguments?.getInt("questionOffset") ?: -1
+                            val lessonName = backStackEntry.arguments?.getString("lessonName") ?: ""
+                            val lessonLang = backStackEntry.arguments?.getString("lessonLang") ?: ""
+                            val totalQuestions = backStackEntry.arguments?.getInt("totalQuestions") ?: -1
+
+                            Log.d("MainActivity", "QuestionScreen: userId=$userId, courseId=$courseId, lessonId=$lessonId")
+
+                            val viewModel: QuestionScreenViewModel = hiltViewModel()
+
+                            QuestionScreen(
+                                viewModel = viewModel,
+                                onBackPressed = { navController.navigate("welcome") },
+                                onNavigateToHomeScreen = { navController.navigate("welcome") },
+                                canGoBack = canGoBack,
+                                userId = userId,
+                                courseId = courseId,
+                                lessonId = lessonId,
+                                questionOffset = questionOffset,
+                                lessonName = lessonName,
+                                lessonLang = lessonLang,
+                                totalQuestions = totalQuestions
+                            )
                         }
                     }
                 }

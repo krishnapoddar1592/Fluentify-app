@@ -2,9 +2,13 @@ package com.example.fluentifyapp.ui.viewmodel.course
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.runtime.MutableState
+import androidx.compose.ui.input.key.Key.Companion.F
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fluentifyapp.data.model.FillQuestion
 import com.example.fluentifyapp.data.model.FillQuestionResponse
+import com.example.fluentifyapp.data.model.MatchQuestion
 import com.example.fluentifyapp.data.model.MatchQuestionResponse
 import com.example.fluentifyapp.data.model.Question
 import com.example.fluentifyapp.data.repository.CourseRepository
@@ -46,8 +50,17 @@ class QuestionScreenViewModel @Inject constructor(
     private val _selectedWord=MutableStateFlow("")
     val selectedWord=_selectedWord.asStateFlow()
 
+    private val _questionsAnswered=MutableStateFlow(0)
+    val questionsAnsweredCount=_questionsAnswered.asStateFlow()
+
     private val _wordPairs=MutableStateFlow<Map<String,String>>(emptyMap())
     val wordPairs=_wordPairs.asStateFlow()
+
+    private val _allQuestionsCompleted= MutableStateFlow(false)
+    val allQuestionsCompleted=_allQuestionsCompleted.asStateFlow()
+
+    private val _correctAnswers=MutableStateFlow(0)
+    val correctAnswers=_correctAnswers.asStateFlow()
 
     private var currentBatchIndex = 0
     private var batchSize = 10
@@ -103,19 +116,30 @@ class QuestionScreenViewModel @Inject constructor(
     fun onQuestionAnswered() {
         try{
             viewModelScope.launch {
-                val response:Result<Unit>
+                var response:Result<Unit> = Result.failure(Exception("unanswered question"))
                 if(selectedWord.value!=""){
+                    val currQues=_questionBatch.value[_currentQuestionIndex.value] as FillQuestion
+                    if(currQues.missingWord==selectedWord.value)
+                        _correctAnswers.value++
+                    _questionsAnswered.value++
                      response=userRepository.answerFillQuestion(userId,courseId,lessonId,_questionBatch.value[_currentQuestionIndex.value].questionId,
                         FillQuestionResponse("Fill", _selectedWord.value)
                     )
                 }
 
-                else{
+                else if(wordPairs.value.isNotEmpty()){
+                    val currQues=_questionBatch.value[_currentQuestionIndex.value] as MatchQuestion
+                    if(currQues.wordPairs==wordPairs.value )
+                        _correctAnswers.value++
+                    _questionsAnswered.value++
                     response=userRepository.answerMatchQuestion(userId,courseId,lessonId,_questionBatch.value[_currentQuestionIndex.value].questionId,
                     MatchQuestionResponse("Match", _wordPairs.value)
                     )
 
                 }
+//                else{
+////                    response=Result<>(F)
+//                }
                 if(response.isSuccess){
                     Log.d(TAG,"Question answered successfully")
                     _isSolved.value=false
@@ -124,6 +148,9 @@ class QuestionScreenViewModel @Inject constructor(
                 }
                 else{
                     Log.e(TAG,response.toString())
+                    _isSolved.value=false
+                    _selectedWord.value=""
+                    _wordPairs.value= emptyMap()
                 }
 
             }
@@ -133,14 +160,22 @@ class QuestionScreenViewModel @Inject constructor(
 
         }
 
-        _currentQuestionIndex.value += 1
-        _currentQuestionNo.value+=1
-
-
-        // Check if we are at the halfway point
-        if (_currentQuestionIndex.value == _questionBatch.value.size / 2) {
-            fetchMoreQuestions()
+        if(_currentQuestionIndex.value==_questionBatch.value.size-1)
+            _allQuestionsCompleted.value=true
+        else{
+            _currentQuestionIndex.value += 1
+            _currentQuestionNo.value+=1
+            // Check if we are at the halfway point
+            if (_currentQuestionIndex.value == _questionBatch.value.size / 2) {
+                fetchMoreQuestions()
+            }
         }
+
+
+
+
+
+
     }
 
     private fun fetchMoreQuestions() {

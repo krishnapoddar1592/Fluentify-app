@@ -94,6 +94,7 @@ dependencies {
 
     // Hilt for dependency injection
     implementation("com.google.dagger:hilt-android:2.49")
+    implementation("androidx.datastore:datastore-core-android:1.1.1")
     kapt("com.google.dagger:hilt-android-compiler:2.49")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
