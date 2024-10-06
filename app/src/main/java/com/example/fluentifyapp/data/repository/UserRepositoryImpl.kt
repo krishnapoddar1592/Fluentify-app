@@ -1,5 +1,6 @@
 package com.example.fluentifyapp.data.repository
 
+import android.util.Log
 import com.example.fluentifyapp.data.api.UserService
 import com.example.fluentifyapp.data.model.CourseSummaryDTO
 import com.example.fluentifyapp.data.model.FillQuestionResponse
@@ -9,6 +10,8 @@ import com.example.fluentifyapp.data.model.MatchQuestionResponse
 import com.example.fluentifyapp.data.model.User
 import com.example.fluentifyapp.data.model.UserRequest
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import javax.inject.Inject
 
@@ -93,17 +96,22 @@ class UserRepositoryImpl @Inject constructor(
         questionId: Int,
         answer: MatchQuestionResponse
     ): Result<Unit> {
-        return try {
-            val response=userService.answerMatchQuestion(userId,courseId,lessonId,questionId,answer)
-            if(response.isSuccessful){
-                Result.success(Unit)
-            }else{
-                Result.failure(HttpException(response))
-            }
-        }catch (e:Exception){
-            Result.failure(e)
-        }
+        return withContext(Dispatchers.IO) {
+            try {
+                Log.d("ApiCall", "Submitting match question: userId=$userId, questionId=$questionId")
+                val response = userService.answerMatchQuestion(userId, courseId, lessonId, questionId, answer)
+                Log.d("ApiCall", "Match question response: ${response.isSuccessful}")
 
+                if (response.isSuccessful) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(HttpException(response))
+                }
+            } catch (e: Exception) {
+                Log.e("ApiCall", "Error submitting match question: ${e.message}")
+                Result.failure(e)
+            }
+        }
     }
 
     override suspend fun answerFillQuestion(
@@ -113,15 +121,19 @@ class UserRepositoryImpl @Inject constructor(
         questionId: Int,
         answer: FillQuestionResponse
     ): Result<Unit> {
-        return try {
-            val response=userService.answerFillQuestion(userId,courseId,lessonId,questionId,answer)
-            if(response.isSuccessful){
-                Result.success(Unit)
-            }else{
-                Result.failure(HttpException(response))
+        return withContext(Dispatchers.IO){ 
+            try {
+                Log.e("ApiCall","$userId $courseId $lessonId $questionId $answer")
+                val response=userService.answerFillQuestion(userId,courseId,lessonId,questionId,answer)
+                Log.e("ApiCall","$response")
+                if(response.isSuccessful){
+                    Result.success(Unit)
+                }else{
+                    Result.failure(HttpException(response))
+                }
+            }catch (e:Exception){
+                Result.failure(e)
             }
-        }catch (e:Exception){
-            Result.failure(e)
         }
     }
 

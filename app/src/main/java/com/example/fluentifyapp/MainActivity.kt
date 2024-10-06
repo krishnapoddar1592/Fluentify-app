@@ -12,13 +12,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.fluentifyapp.data.model.LessonScoreData
+import com.example.fluentifyapp.ui.screens.course.LessonScoreScreen
 import com.example.fluentifyapp.ui.screens.course.LessonStartScreen
 import com.example.fluentifyapp.ui.screens.course.QuestionScreen
 import com.example.fluentifyapp.ui.screens.home.CourseSelectionScreen
@@ -197,6 +198,8 @@ class MainActivity : ComponentActivity() {
                                 navArgument("totalQuestions") { type = NavType.IntType }
                             )
                         ) { backStackEntry ->
+
+                            // Extract the arguments from the backStackEntry
                             val canGoBack = backStackEntry.arguments?.getBoolean("canGoBack") ?: false
                             val userId = backStackEntry.arguments?.getString("userId") ?: ""
                             val courseId = backStackEntry.arguments?.getInt("courseId") ?: 0
@@ -214,6 +217,13 @@ class MainActivity : ComponentActivity() {
                                 viewModel = viewModel,
                                 onBackPressed = { navController.navigate("welcome") },
                                 onNavigateToHomeScreen = { navController.navigate("welcome") },
+                                onNavigateToLessonScoreScreen = { lessonScoreData ->
+
+                                    // Navigate to the LessonScoreScreen, passing required data
+                                    navController.navigate(
+                                        "lessonScoreScreen/$userId/$courseId/$lessonId/$lessonName/$lessonLang/${lessonScoreData.totalQuestions}/${lessonScoreData.questionsAnswered}/${lessonScoreData.correctAnswers}/${lessonScoreData.incorrectAnswers}/${lessonScoreData.averageTime}/${lessonScoreData.totalTime}/${lessonScoreData.xpEarned}/${lessonScoreData.totalScore}"
+                                    )
+                                },
                                 canGoBack = canGoBack,
                                 userId = userId,
                                 courseId = courseId,
@@ -222,6 +232,65 @@ class MainActivity : ComponentActivity() {
                                 lessonName = lessonName,
                                 lessonLang = lessonLang,
                                 totalQuestions = totalQuestions
+                            )
+                        }
+
+
+                        composable(
+                            route = "lessonScoreScreen/{userId}/{courseId}/{lessonId}/{lessonName}/{lessonLang}/{totalQuestions}/{questionsAnswered}/{correctAnswers}/{incorrectAnswers}/{averageTime}/{totalTime}/{xpEarned}/{totalScore}",
+                            arguments = listOf(
+                                navArgument("userId") { type = NavType.StringType },
+                                navArgument("courseId") { type = NavType.IntType },
+                                navArgument("lessonId") { type = NavType.IntType },
+                                navArgument("lessonName") { type = NavType.StringType },
+                                navArgument("lessonLang") { type = NavType.StringType },
+                                navArgument("totalQuestions") { type = NavType.IntType },
+                                navArgument("questionsAnswered") { type = NavType.IntType },
+                                navArgument("correctAnswers") { type = NavType.IntType },
+                                navArgument("incorrectAnswers") { type = NavType.IntType },
+                                navArgument("averageTime") { type = NavType.IntType },
+                                navArgument("totalTime") { type = NavType.IntType },
+                                navArgument("xpEarned") { type = NavType.IntType },
+                                navArgument("totalScore") { type = NavType.FloatType }
+                            )
+                        ) { backStackEntry ->
+
+                            // Extract the arguments from backStackEntry
+                            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+                            val courseId = backStackEntry.arguments?.getInt("courseId") ?: -1
+                            val lessonId = backStackEntry.arguments?.getInt("lessonId") ?: -1
+                            val lessonName = backStackEntry.arguments?.getString("lessonName") ?: ""
+                            val lessonLang = backStackEntry.arguments?.getString("lessonLang") ?: ""
+                            val totalQuestions = backStackEntry.arguments?.getInt("totalQuestions") ?: 0
+                            val questionsAnswered = backStackEntry.arguments?.getInt("questionsAnswered") ?: 0
+                            val correctAnswers = backStackEntry.arguments?.getInt("correctAnswers") ?: 0
+                            val incorrectAnswers = backStackEntry.arguments?.getInt("incorrectAnswers") ?: 0
+                            val averageTime = backStackEntry.arguments?.getInt("averageTime") ?: 0
+                            val totalTime = backStackEntry.arguments?.getInt("totalTime") ?: 0
+                            val xpEarned = backStackEntry.arguments?.getInt("xpEarned") ?: 0
+                            val totalScore = backStackEntry.arguments?.getFloat("totalScore") ?: 0f
+
+                            // Create LessonScoreData from the arguments
+                            val lessonScoreData = LessonScoreData(
+                                totalQuestions = totalQuestions,
+                                questionsAnswered = questionsAnswered,
+                                correctAnswers = correctAnswers,
+                                incorrectAnswers = incorrectAnswers,
+                                averageTime = averageTime,
+                                totalTime = totalTime,
+                                xpEarned = xpEarned,
+                                totalScore = totalScore
+                            )
+
+                            // Pass the arguments and data to the composable function
+                            LessonScoreScreen(
+                                onBackPressed = { navController.popBackStack() },
+                                userId = userId,
+                                courseId = courseId,
+                                lessonId = lessonId,
+                                lessonName = lessonName,
+                                lessonLang = lessonLang,
+                                lessonScoreData = lessonScoreData
                             )
                         }
                     }
