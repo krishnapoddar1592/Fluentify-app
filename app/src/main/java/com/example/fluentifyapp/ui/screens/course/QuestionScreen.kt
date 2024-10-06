@@ -1,6 +1,7 @@
 package com.example.fluentifyapp.ui.screens.course
 
 import android.graphics.BlurMaskFilter
+import android.util.Log
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -50,6 +51,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -63,6 +65,7 @@ import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.unit.Dp
 import com.example.fluentifyapp.data.model.FillQuestion
+import com.example.fluentifyapp.data.model.LessonScoreData
 import com.example.fluentifyapp.data.model.MatchQuestion
 import com.example.fluentifyapp.ui.screens.home.shimmerLoadingAnimation
 import com.example.fluentifyapp.ui.theme.boxBackground
@@ -77,17 +80,18 @@ import kotlin.math.floor
 fun QuestionScreen(
     viewModel: QuestionScreenViewModel,
     onBackPressed: () -> Unit,
-    onNavigateToHomeScreen: ()->Unit,
+    onNavigateToHomeScreen: () -> Unit,
     canGoBack: Boolean = false,
-    userId:String="",
-    courseId:Int=-1,
-    lessonId:Int=-1,
-    questionOffset:Int=0,
-    lessonName:String="",
-    lessonLang:String="",
-    totalQuestions:Int=0
+    userId: String = "",
+    courseId: Int = -1,
+    lessonId: Int = -1,
+    questionOffset: Int = 0,
+    lessonName: String = "",
+    lessonLang: String = "",
+    totalQuestions: Int = 0,
+    onNavigateToLessonScoreScreen: (LessonScoreData) -> Unit,
 
-) {
+    ) {
 
     val isLoading by viewModel.isLoading.collectAsState()
     LaunchedEffect(key1 = Unit) {
@@ -107,7 +111,7 @@ fun QuestionScreen(
                 if (isLoading) {
                     ShimmerQuestionScreen()
                 } else {
-                    ActualQuestionScreen(viewModel,onBackPressed,canGoBack,onNavigateToHomeScreen,lessonName,lessonLang,totalQuestions,questionOffset)
+                    ActualQuestionScreen(viewModel,onBackPressed,canGoBack,onNavigateToHomeScreen,lessonName,lessonLang,totalQuestions,questionOffset,onNavigateToLessonScoreScreen)
                 }
             }
         }
@@ -133,16 +137,18 @@ fun ActualQuestionScreen(
     lessonName: String,
     lessonLang: String,
     totalQuestions: Any,
-    questionOffset: Int
+    questionOffset: Int,
+    onNavigateToLessonScoreScreen: (LessonScoreData) -> Unit,
 ) {
 
-    var secondsRemaining by remember { mutableFloatStateOf(15f) }
-    var isTimerRunning by remember { mutableStateOf(true) }
+    val secondsRemaining =viewModel.secondsRemaining.collectAsState()
 
-    var questionBatch=viewModel.questionBatch.collectAsState()
-    var currentQuestionIndex=viewModel.currentQuestionIndex.collectAsState()
+    val isTimerRunning = viewModel.isTimerRunning.collectAsState()
 
-    var question=questionBatch.value[currentQuestionIndex.value]
+    val questionBatch=viewModel.questionBatch.collectAsState()
+    val currentQuestionIndex=viewModel.currentQuestionIndex.collectAsState()
+
+    val question=questionBatch.value[currentQuestionIndex.value]
 
     val currentQuesNo=viewModel.currentQuestionNo.collectAsState()
 
@@ -152,32 +158,43 @@ fun ActualQuestionScreen(
 
     val correctAnswers=viewModel.correctAnswers.collectAsState()
 
+    val totalTimeTaken=viewModel.totalTimeTaken.collectAsState()
+
     val progress by animateFloatAsState(
-        targetValue = secondsRemaining/ 15,
+        targetValue = secondsRemaining.value/ 15,
         animationSpec = tween(durationMillis = 100)
     )
 
-    LaunchedEffect(key1 = secondsRemaining, key2 = isTimerRunning) {
-        if (isTimerRunning) {
-            if (secondsRemaining > 0) {
+    LaunchedEffect(key1 = secondsRemaining.value, key2 = isTimerRunning.value,key3 = currentQuestionIndex.value) {
+        if (isTimerRunning.value) {
+            if (secondsRemaining.value > 0) {
                 delay(100L)
+                var updatedTime=if(secondsRemaining.value>=0.1) secondsRemaining.value-0.1f else 0f
+//                Log.e("secondsRemaining",secondsRemaining.value.toString() )
 //                if(secondsRemaining-0.1f)
-                secondsRemaining=if(secondsRemaining>=0.1) secondsRemaining-0.1f else 0f
+                viewModel.updateSecondsRemaining(updatedTime)
             } else {
-                viewModel.onQuestionAnswered()
+                viewModel.setIsTimerRunning(false)
 
-                isTimerRunning = false
+                viewModel.onQuestionAnswered()
             }
         }
     }
     LaunchedEffect(key1=allQuestionsCompleted.value) {
         if(allQuestionsCompleted.value){
-//            onQuizCompleteScreen(
-//                questionsAnswered.value,
-//                questionBatch.value.size,
-//                correctAnswers.value
-//
-//            )
+            onNavigateToLessonScoreScreen(
+                LessonScoreData(
+                    totalQuestions = questionBatch.value.size,
+                    questionsAnswered = questionsAnswered.value,
+                    correctAnswers = correctAnswers.value,
+                    incorrectAnswers = questionsAnswered.value-correctAnswers.value,
+                    averageTime = totalTimeTaken.value/questionBatch.value.size,
+                    totalTime = totalTimeTaken.value,
+                    xpEarned = correctAnswers.value*15,
+                    totalScore = correctAnswers.value.toFloat()/questionBatch.value.size.toFloat()*100f
+                )
+
+            )
         }
 
     }
@@ -271,17 +288,35 @@ fun ActualQuestionScreen(
 
 
                             }
-
+                            var questionText=question.questionText
+                            if(question.questionType=="Fill"){
+                                val fillQuestion =question as FillQuestion
+                                questionText=fillQuestion.sentenceBefore+"___"+fillQuestion.sentenceAfter
+                            }
                             Spacer(modifier = Modifier.height(20.dp))
                             Text(
-                                text = question.questionText,
-                                fontSize = 15.sp,
+                                text = questionText,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.Normal,
                                 textAlign = TextAlign.Center,
                                 fontFamily = AppFonts.quicksand,
                                 color = Color.Black,
                                 modifier = Modifier.padding(horizontal = 16.dp)
                             )
+
+//                            if(question.questionType=="Fill"){
+//                                val fillQuestion =question as FillQuestion
+//                                Text(
+//                                    text = fillQuestion.sentenceBefore+"___"+fillQuestion.sentenceAfter,
+//                                    fontSize = 15.sp,
+//                                    fontWeight = FontWeight.Normal,
+//                                    textAlign = TextAlign.Center,
+//                                    fontFamily = AppFonts.quicksand,
+//                                    color = Color.Black,
+//                                    modifier = Modifier.padding(horizontal = 16.dp)
+//                                )
+//                            }
+
                         }
                     }
                 }
@@ -302,7 +337,7 @@ fun ActualQuestionScreen(
                         modifier = Modifier.size(79.dp)
                     )
                     Text(
-                        text = floor(secondsRemaining).toInt().toString(),
+                        text = floor(secondsRemaining.value).toInt().toString(),
                         color = primaryColor,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
@@ -339,7 +374,7 @@ fun ActualQuestionScreen(
 @Composable
 fun FillQuestionOptions(viewModel: QuestionScreenViewModel) {
     // State to track the selected option by index (initially -1, meaning none is selected)
-    var selectedIndex by remember { mutableIntStateOf(-1) }
+    var selectedIndex =viewModel.selectedIndex.collectAsState()
 
     // List of option texts
     var questionBatch=viewModel.questionBatch.collectAsState()
@@ -347,6 +382,10 @@ fun FillQuestionOptions(viewModel: QuestionScreenViewModel) {
 
     var question=questionBatch.value[currentQuestionIndex.value] as FillQuestion
     val options = question.options
+    val isTimerRunning = viewModel.isTimerRunning.collectAsState()
+//    LaunchedEffect(key1=isTimerRunning.value) {
+//        selectedIndex=-1
+//    }
 
 
 
@@ -361,10 +400,10 @@ fun FillQuestionOptions(viewModel: QuestionScreenViewModel) {
         options.forEachIndexed { index, text ->
             OptionBox(
                 text = text,
-                isSelected = selectedIndex == index, // Check if this option is selected
+                isSelected = selectedIndex.value == index, // Check if this option is selected
                 onClick = {
-                    selectedIndex = index // Update selected index when clicked
-                    viewModel.setSelectedWord(options[selectedIndex])
+                    viewModel.setSelectedIndex(index) // Update selected index when clicked
+                    viewModel.setSelectedWord(options[index])
                 },
             )
             Spacer(modifier = Modifier.height(16.dp)) // Space between options
@@ -374,47 +413,51 @@ fun FillQuestionOptions(viewModel: QuestionScreenViewModel) {
 
 @Composable
 fun MatchQuestionOptions(viewModel: QuestionScreenViewModel) {
+    val questionBatch = viewModel.questionBatch.collectAsState()
+    val currentQuestionIndex = viewModel.currentQuestionIndex.collectAsState()
 
-    var questionBatch=viewModel.questionBatch.collectAsState()
-    var currentQuestionIndex=viewModel.currentQuestionIndex.collectAsState()
+    val question = questionBatch.value[currentQuestionIndex.value] as MatchQuestion
 
-    var question=questionBatch.value[currentQuestionIndex.value] as MatchQuestion
+    val translatedWords: List<String> = question.wordPairs.keys.toList()
+    val originalWords: List<String> = question.wordPairs.values.toList()
 
-    val translatedWords:List<String> = question.wordPairs.keys.toList()
-    val originalWords:List<String> = question.wordPairs.values.toList()
+    val currentFirstWord = viewModel.currentFirstWord.collectAsState()
+    val currentSecondWord = viewModel.currentSecondWord.collectAsState()
+    val isOriginalWordSelected = viewModel.isOriginalWordSelected.collectAsState()
+    val isTranslatedWordSelected = viewModel.isTranslatedWordSelected.collectAsState()
+    val selectedPairsCount = viewModel.selectedPairsCount.collectAsState()
+    val isTimerRunning = viewModel.isTimerRunning.collectAsState()
 
-    var currentFirstWord by remember { mutableStateOf("") }
-    var currentSecondWord by remember { mutableStateOf("") }
-    var isOriginalWordSelected by remember { mutableStateOf(false) }
-    var isTranslatedWordSelected by remember { mutableStateOf(false) }
-    var selectedPairsCount by remember { mutableStateOf(0) }
+    val wordMapState = viewModel.wordMap.collectAsState()
+    val colorMap = viewModel.colorMap.collectAsState()
+    val currentSelectedColor = viewModel.currentSelectedColor.collectAsState()
+    val resetTrigger = viewModel.resetTrigger.collectAsState()
 
-    val wordMap = remember { mutableStateMapOf<String, String>() }
-    val colorMap = remember { mutableStateMapOf<String, Color>() }
-    val isLoading = remember { mutableStateOf(true) }
+    var isLoading by remember { mutableStateOf(true) }
     var isOperationInProgress by remember { mutableStateOf(false) }
-    var currentSelectedColor by remember { mutableStateOf<Color?>(null) }
+    var resetKey by remember { mutableStateOf(0) }
 
-    // Create a Queue (LinkedList) of colors
-    val colorQueue = remember {
-        LinkedList(listOf(
-            Color(0xFFa5f3fc),
-            Color(0xFF99f6e4),
-            Color(0xFFfecdd3),
-            Color(0xFFc7d2fe)
-        ))
+    LaunchedEffect(currentQuestionIndex.value, resetTrigger.value) {
+        Log.d("MatchQuestion", "LaunchedEffect triggered - Index: ${currentQuestionIndex.value}, ResetTrigger: ${resetTrigger.value}")
+
+        isLoading = true
+
+        viewModel.initializeWordMapForMatchQuestion()
+
+        Log.d("MatchQuestion", "Reset completed for question ${currentQuestionIndex.value}")
+
+        isLoading = false
     }
 
-    LaunchedEffect(key1 = Unit) {
-        isLoading.value = true
-        for (i in translatedWords.indices) {
-            wordMap[translatedWords[i]] = ""
-            wordMap[originalWords[i]] = ""
+    LaunchedEffect(wordMapState.value) {
+        if (wordMapState.value.isEmpty()) {
+            resetKey++
         }
-        isLoading.value = false
     }
 
-    if (isLoading.value) {
+//    Log.e(viewModel.TAG, wordMapState.value.toString())
+
+    if (isLoading) {
         // Show loading indicator
     } else {
         Column(
@@ -430,36 +473,13 @@ fun MatchQuestionOptions(viewModel: QuestionScreenViewModel) {
                 ) {
                     MatchOptionBox(
                         text = translatedWords[i],
-                        isSelected = wordMap[translatedWords[i]]!!.isNotEmpty() || currentFirstWord == translatedWords[i],
-                        color = colorMap[translatedWords[i]] ?: (if (currentFirstWord == translatedWords[i]) currentSelectedColor!! else Color.Transparent),
-                        isDimmed = currentFirstWord.isNotEmpty() && currentFirstWord != translatedWords[i] && isTranslatedWordSelected,
+                        isSelected = wordMapState.value[translatedWords[i]]!!.isNotEmpty() || currentFirstWord.value == translatedWords[i],
+                        color = colorMap.value[translatedWords[i]] ?: (if (currentFirstWord.value == translatedWords[i]) currentSelectedColor.value!! else Color.Transparent),
+                        isDimmed = currentFirstWord.value.isNotEmpty() && currentFirstWord.value != translatedWords[i] && isTranslatedWordSelected.value,
                         onClick = {
                             if (!isOperationInProgress) {
                                 isOperationInProgress = true
-                                handleWordSelection(
-                                    selectedWord = translatedWords[i],
-                                    isTranslated = true,
-                                    currentFirstWord = currentFirstWord,
-                                    currentSecondWord = currentSecondWord,
-                                    isOriginalWordSelected = isOriginalWordSelected,
-                                    isTranslatedWordSelected = isTranslatedWordSelected,
-                                    wordMap = wordMap,
-                                    colorMap = colorMap,
-                                    colorQueue = colorQueue,
-                                    currentSelectedColor = currentSelectedColor,
-                                    onUpdateCurrentWords = { first, second ->
-                                        currentFirstWord = first
-                                        currentSecondWord = second
-                                    },
-                                    onUpdateSelectionFlags = { original, translated ->
-                                        isOriginalWordSelected = original
-                                        isTranslatedWordSelected = translated
-                                    },
-                                    onUpdateSelectedPairsCount = { selectedPairsCount = it },
-                                    onUpdateCurrentSelectedColor = { currentSelectedColor = it },
-                                    viewModel,
-                                    translatedWords
-                                )
+                                viewModel.handleWordSelection(translatedWords[i], true)
                                 isOperationInProgress = false
                             }
                         }
@@ -467,36 +487,13 @@ fun MatchQuestionOptions(viewModel: QuestionScreenViewModel) {
                     Spacer(modifier = Modifier.width(20.dp))
                     MatchOptionBox(
                         text = originalWords[i],
-                        isSelected = wordMap[originalWords[i]]!!.isNotEmpty() || currentFirstWord == originalWords[i],
-                        color = colorMap[originalWords[i]] ?: (if (currentFirstWord == originalWords[i]) currentSelectedColor!! else Color.Transparent),
-                        isDimmed = currentFirstWord.isNotEmpty() && currentFirstWord != originalWords[i] && isOriginalWordSelected,
+                        isSelected = wordMapState.value[originalWords[i]]!!.isNotEmpty() || currentFirstWord.value == originalWords[i],
+                        color = colorMap.value[originalWords[i]] ?: (if (currentFirstWord.value == originalWords[i]) currentSelectedColor.value!! else Color.Transparent),
+                        isDimmed = currentFirstWord.value.isNotEmpty() && currentFirstWord.value != originalWords[i] && isOriginalWordSelected.value,
                         onClick = {
                             if (!isOperationInProgress) {
                                 isOperationInProgress = true
-                                handleWordSelection(
-                                    selectedWord = originalWords[i],
-                                    isTranslated = false,
-                                    currentFirstWord = currentFirstWord,
-                                    currentSecondWord = currentSecondWord,
-                                    isOriginalWordSelected = isOriginalWordSelected,
-                                    isTranslatedWordSelected = isTranslatedWordSelected,
-                                    wordMap = wordMap,
-                                    colorMap = colorMap,
-                                    colorQueue = colorQueue,
-                                    currentSelectedColor = currentSelectedColor,
-                                    onUpdateCurrentWords = { first, second ->
-                                        currentFirstWord = first
-                                        currentSecondWord = second
-                                    },
-                                    onUpdateSelectionFlags = { original, translated ->
-                                        isOriginalWordSelected = original
-                                        isTranslatedWordSelected = translated
-                                    },
-                                    onUpdateSelectedPairsCount = { selectedPairsCount = it },
-                                    onUpdateCurrentSelectedColor = { currentSelectedColor = it },
-                                    viewModel = viewModel,
-                                    translatedWords = translatedWords
-                                )
+                                viewModel.handleWordSelection(originalWords[i], false)
                                 isOperationInProgress = false
                             }
                         }
@@ -507,120 +504,71 @@ fun MatchQuestionOptions(viewModel: QuestionScreenViewModel) {
     }
 }
 
-@Composable
-fun MatchOptionBox(
-    text: String,
-    isSelected: Boolean,
-    color: Color,
-    isDimmed: Boolean,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .size(120.dp, 42.dp)
-            .shadow(4.dp, shape = RoundedCornerShape(9.dp), clip = false)
-            .background(
-                color = if (isSelected) color else boxBackground,
-                shape = RoundedCornerShape(9.dp)
-            )
-            .clickable(
-                onClick = onClick,
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() }
-            )
-            .padding(vertical = 8.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        // Box for the dimming effect
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .alpha(if (isDimmed) 0.5f else 1f)
-        ) {
-            // Text for the main content
-            Text(
-                text = text,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Normal,
-                color = Color.Black,
-                fontFamily = AppFonts.quicksand,
-                modifier = Modifier.align(Alignment.Center)
-            )
-        }
-    }
-}
-
-fun handleWordSelection(
-    selectedWord: String,
-    isTranslated: Boolean,
-    currentFirstWord: String,
-    currentSecondWord: String,
-    isOriginalWordSelected: Boolean,
-    isTranslatedWordSelected: Boolean,
-    wordMap: MutableMap<String, String>,
-    colorMap: MutableMap<String, Color>,
-    colorQueue: Queue<Color>,
-    currentSelectedColor: Color?,
-    onUpdateCurrentWords: (String, String) -> Unit,
-    onUpdateSelectionFlags: (Boolean, Boolean) -> Unit,
-    onUpdateSelectedPairsCount: (Int) -> Unit,
-    onUpdateCurrentSelectedColor: (Color?) -> Unit,
-    viewModel: QuestionScreenViewModel,
-    translatedWords: List<String>
-) {
-    when {
-        // Case 1: Selecting the first word of a pair
-        currentFirstWord.isEmpty() && (wordMap[selectedWord]?.isEmpty() == true) -> {
-            val newColor = colorQueue.poll() ?: Color.Gray
-            colorMap[selectedWord] = newColor
-            onUpdateCurrentWords(selectedWord, "")
-            onUpdateSelectionFlags(!isTranslated, isTranslated)
-            onUpdateCurrentSelectedColor(newColor)
-        }
-        // Case 2: Selecting the second word of a pair
-        currentSecondWord.isEmpty() && ((isTranslated && isOriginalWordSelected) || (!isTranslated && isTranslatedWordSelected)) -> {
-            if (wordMap[selectedWord] != "") {
-                viewModel.removeWordPairs()
-                val currentPair = wordMap[selectedWord]
-                wordMap[currentPair!!] = ""
-                colorMap[selectedWord]?.let { colorQueue.offer(it) }
-                colorMap.remove(selectedWord)
-                colorMap.remove(currentPair)
-            }
-
-            wordMap[currentFirstWord] = selectedWord
-            wordMap[selectedWord] = currentFirstWord
-            currentSelectedColor?.let {
-                colorMap[currentFirstWord] = it
-                colorMap[selectedWord] = it
-            }
-            if(colorQueue.isEmpty()){
-                val finalWordMap: MutableMap<String, String> = emptyMap<String,String>().toMutableMap()
-                for(word in translatedWords){
-                    finalWordMap[word]= wordMap[word]!!
-                }
-                viewModel.setWordPairs(finalWordMap)
-            }
-            onUpdateCurrentWords("", "")
-            onUpdateSelectionFlags(false, false)
-            onUpdateSelectedPairsCount(colorMap.size / 2)
-            onUpdateCurrentSelectedColor(null)
-        }
-        // Case 3: Deselecting a word (breaking a pair)
-        selectedWord == currentFirstWord || (wordMap[selectedWord]?.isNotEmpty() == true && currentFirstWord.isEmpty()) -> {
-            val pairedWord = wordMap[selectedWord] ?: ""
-            wordMap[selectedWord] = ""
-            wordMap[pairedWord] = ""
-            colorMap[selectedWord]?.let { colorQueue.offer(it) }
-            colorMap.remove(selectedWord)
-            colorMap.remove(pairedWord)
-            onUpdateCurrentWords("", "")
-            onUpdateSelectionFlags(false, false)
-            onUpdateSelectedPairsCount(colorMap.size / 2)
-            onUpdateCurrentSelectedColor(null)
-        }
-    }
-}
+//
+//fun handleWordSelection(
+//    selectedWord: String,
+//    isTranslated: Boolean,
+//    currentFirstWord: String,
+//    currentSecondWord: String,
+//    isOriginalWordSelected: Boolean,
+//    isTranslatedWordSelected: Boolean,
+//    wordMapState: State<Map<String, String>>,
+//    colorMap: MutableMap<String, Color>,
+//    colorQueue: Queue<Color>,
+//    currentSelectedColor: Color?,
+//    onUpdateCurrentWords: (String, String) -> Unit,
+//    onUpdateSelectionFlags: (Boolean, Boolean) -> Unit,
+//    onUpdateSelectedPairsCount: (Int) -> Unit,
+//    onUpdateCurrentSelectedColor: (Color?) -> Unit,
+//    viewModel: QuestionScreenViewModel,
+//    translatedWords: List<String>
+//) {
+//    when {
+//        // Case 1: Selecting the first word of a pair
+//        currentFirstWord.isEmpty() && (wordMapState.value[selectedWord]?.isEmpty() == true) -> {
+//            val newColor = colorQueue.poll() ?: Color.Gray
+//            colorMap[selectedWord] = newColor
+//            onUpdateCurrentWords(selectedWord, "")
+//            onUpdateSelectionFlags(!isTranslated, isTranslated)
+//            onUpdateCurrentSelectedColor(newColor)
+//        }
+//        // Case 2: Selecting the second word of a pair
+//        currentSecondWord.isEmpty() && ((isTranslated && isOriginalWordSelected) || (!isTranslated && isTranslatedWordSelected)) -> {
+//            if (wordMapState.value[selectedWord] != "") {
+//                viewModel.clearWordPair(selectedWord)
+//                colorMap[selectedWord]?.let { colorQueue.offer(it) }
+//                colorMap.remove(selectedWord)
+//                colorMap.remove(wordMapState.value[selectedWord])
+//            }
+//
+//            viewModel.updateWordMap(currentFirstWord, selectedWord)
+//            currentSelectedColor?.let {
+//                colorMap[currentFirstWord] = it
+//                colorMap[selectedWord] = it
+//            }
+//
+//            if (colorQueue.isEmpty()) {
+//                viewModel.setWordPairs(wordMapState.value.filter { it.value.isNotEmpty() }.toMap())
+//            }
+//
+//            onUpdateCurrentWords("", "")
+//            onUpdateSelectionFlags(false, false)
+//            onUpdateSelectedPairsCount(colorMap.size / 2)
+//            onUpdateCurrentSelectedColor(null)
+//        }
+//        // Case 3: Deselecting a word
+//        selectedWord == currentFirstWord || (wordMapState.value[selectedWord]?.isNotEmpty() == true && currentFirstWord.isEmpty()) -> {
+//            viewModel.clearWordPair(selectedWord)
+//            colorMap[selectedWord]?.let { colorQueue.offer(it) }
+//            colorMap.remove(selectedWord)
+//            colorMap.remove(wordMapState.value[selectedWord])
+//            onUpdateCurrentWords("", "")
+//            onUpdateSelectionFlags(false, false)
+//            onUpdateSelectedPairsCount(colorMap.size / 2)
+//            onUpdateCurrentSelectedColor(null)
+//        }
+//    }
+//}
 
 @Composable
 fun OptionBox(
@@ -662,6 +610,48 @@ fun OptionBox(
 
             // The clickable circle on the right
             ClickableCircle(isFilled = isSelected)
+        }
+    }
+}
+@Composable
+fun MatchOptionBox(
+    text: String,
+    isSelected: Boolean,
+    color: Color,
+    isDimmed: Boolean,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(120.dp, 42.dp)
+            .shadow(4.dp, shape = RoundedCornerShape(9.dp), clip = false)
+            .background(
+                color = if (isSelected) color else boxBackground,
+                shape = RoundedCornerShape(9.dp)
+            )
+            .clickable(
+                onClick = onClick,
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            )
+            .padding(vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        // Box for the dimming effect
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(if (isDimmed) 0.5f else 1f)
+        ) {
+            // Text for the main content
+            Text(
+                text = text,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Normal,
+                color = Color.Black,
+                fontFamily = AppFonts.quicksand,
+                modifier = Modifier.align(Alignment.Center)
+            )
         }
     }
 }

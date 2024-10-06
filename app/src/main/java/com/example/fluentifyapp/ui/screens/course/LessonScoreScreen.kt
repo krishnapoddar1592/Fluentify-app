@@ -2,8 +2,14 @@ package com.example.fluentifyapp.ui.screens.course
 
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,16 +25,20 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -39,11 +49,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fluentifyapp.R
+import com.example.fluentifyapp.data.model.LessonScoreData
 import com.example.fluentifyapp.languages.LanguageData
 import com.example.fluentifyapp.ui.screens.common.HeaderComponent
 import com.example.fluentifyapp.ui.theme.AppFonts
 import com.example.fluentifyapp.ui.theme.backgroundColor
 import com.example.fluentifyapp.ui.theme.primaryColor
+import com.example.fluentifyapp.ui.viewmodel.course.QuestionScreenViewModel
 
 
 @Composable
@@ -55,14 +67,7 @@ fun LessonScoreScreen(
     lessonId:Int=-1,
     lessonName:String="",
     lessonLang:String="",
-    totalQuestions: Int,
-    questionsAnswered:Int,
-    correctAnswers:Int,
-    incorrectAnswers:Int,
-    averageTime:Int=0,
-    totalTime:Int=0,
-    xpEarned:Int=0,
-    totalScore:Float=0f
+    lessonScoreData: LessonScoreData
 
 ) {
     Box(
@@ -79,7 +84,7 @@ fun LessonScoreScreen(
 //                if (isLoading) {
 //                    ShimmerQuestionScreen()
 //                } else {
-                    ActualQuestionScreen(onBackPressed,lessonName,lessonLang,totalQuestions,questionsAnswered,correctAnswers,incorrectAnswers,averageTime, totalTime, xpEarned,totalScore)
+                ActualLessonScoreScreen(onBackPressed,lessonName,lessonLang,lessonScoreData.totalQuestions,lessonScoreData.questionsAnswered,lessonScoreData.correctAnswers,lessonScoreData.incorrectAnswers,lessonScoreData.averageTime, lessonScoreData.totalTime, lessonScoreData.xpEarned,lessonScoreData.totalScore)
 //                }
             }
         }
@@ -97,7 +102,7 @@ fun LessonScoreScreen(
 
 //@Preview
 @Composable
-fun ActualQuestionScreen(
+fun ActualLessonScoreScreen(
     onBackPressed: () -> Unit,
     lessonName: String,
     lessonLang: String,
@@ -152,6 +157,58 @@ fun ActualQuestionScreen(
 
         }
         StatsGrid(averageTime,totalTime,xpEarned,totalScore)
+        Spacer(modifier = Modifier.height(15.dp))
+        NextLessonButton()
+
+    }
+}
+
+@Composable
+fun NextLessonButton() {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val buttonColor = Color(0xFF00CED1)
+    val shadowColor = Color(0xFF008B8B)  // Darker shade for shadow
+    val shape =RoundedCornerShape(8.dp)
+
+
+    // Animate shadow offset and blur radius
+    // To create a hide shadow animation on press
+    val shadowOffset by animateDpAsState(
+        targetValue = if (isPressed) 0.dp else 4.dp
+    )
+    val shadowBlur by animateDpAsState(
+        targetValue = if (isPressed) 0.dp else 8.dp
+    )
+
+
+    Box(
+        modifier = Modifier
+            .size(height = 36.dp, width = 303.dp)
+            .doubleShadowDrop(shape, shadowOffset, shadowBlur)
+//            .offset(y = if (isPressed) 2.dp else 0.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xFF14B8A6), shape)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = LocalIndication.current,
+                onClick = {
+
+                },
+            ),
+
+//            .alpha(if (isSolved.value) 1f else 0.5f),
+        contentAlignment = Alignment.Center,
+
+        ) {
+        Text(
+            text = "Next Lesson",
+            fontSize = 16.sp,
+            fontFamily = AppFonts.rubik,
+            fontWeight = FontWeight.Bold,
+            color = Color.White // Adjust heading text color if needed
+        )
     }
 }
 
@@ -162,11 +219,11 @@ fun StatsGrid(averageTime: Int, totalTime: Int, xpEarned: Int, totalScore: Float
         modifier = Modifier
             .padding(top = 60.dp, bottom = 20.dp)
             .fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             resultDataBox(heading = "Average Time:", value ="${averageTime}s" , trailer ="per question" , icon = R.drawable.clock)
             resultDataBox(heading = "Accuracy: " , value =String.format("%.2f", totalScore)+"%" , trailer ="" , icon =R.drawable.target2 )
@@ -384,7 +441,7 @@ fun resultDataBox(
 ) {
     val fontFamily = if (isPreview()) fallbackFontFamily else AppFonts.quicksand
     Box(
-        modifier = Modifier.size(148.dp, 64.dp),
+        modifier = Modifier.size(148.dp, 75.dp),
         contentAlignment = Alignment.TopCenter
     ) {
         // Question Box
@@ -418,7 +475,7 @@ fun resultDataBox(
                     // Icon Circular Box
                     Box(
                         modifier = Modifier
-                            .size(24.dp) // Size for the circular box (48.dp diameter)
+                            .size(30.dp) // Size for the circular box (48.dp diameter)
                             .background(
                                 color = Color(0xFFCCFBF1), // Light greenish background for the circular box
                                 shape = CircleShape
@@ -429,26 +486,27 @@ fun resultDataBox(
                         Icon(
                             painter = painterResource(id = icon),
                             contentDescription = null,
-                            modifier = Modifier.size(16.dp), // Icon size, 66% of 48.dp (circular box)
+                            modifier = Modifier.size(20.dp), // Icon size, 66% of 48.dp (circular box)
                             tint = Color.Black // Adjust the icon color if needed
                         )
                     }
 
                     Column(
                         horizontalAlignment = Alignment.Start,
-                        modifier = Modifier.padding(start = 15.dp) // Adjusted padding for spacing between icon and text
+                        verticalArrangement = Arrangement.SpaceEvenly,
+                        modifier = Modifier.padding(start = 15.dp,top=5.dp,bottom = 5.dp) // Adjusted padding for spacing between icon and text
                     ) {
                         // Heading
                         Text(
                             text = heading,
                             fontSize = 12.sp,
                             fontFamily = fontFamily,
-                            fontWeight = FontWeight.Medium,
+                            fontWeight = FontWeight.Bold,
                             color = Color.Black // Adjust heading text color if needed
                         )
-                        if(trailer.isEmpty()){
-                            Spacer(modifier = Modifier.height(5.dp))
-                        }
+//                        if(trailer.isEmpty()){
+//                            Spacer(modifier = Modifier.height(5.dp))
+//                        }
 
                         // Value (Bold)
                         Text(
@@ -473,15 +531,15 @@ fun resultDataBox(
         }
     }
 }
-@Preview(showBackground = true)
-@Composable
-fun statGridPreview() {
-    StatsGrid(
-        averageTime = 10,
-        totalTime = 100,
-        xpEarned = 120,
-        totalScore = 66.66f
-    )
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun statGridPreview() {
+//    StatsGrid(
+//        averageTime = 10,
+//        totalTime = 100,
+//        xpEarned = 120,
+//        totalScore = 66.66f
+//    )
+//}
 
 
